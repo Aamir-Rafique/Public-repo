@@ -1,0 +1,3460 @@
+Main FOrm 
+
+using System;
+using System.Drawing;
+using System.Windows.Forms;
+
+namespace Gym___Fitness_App
+{
+    public partial class MainForm : Form
+    {
+        public MainForm()
+        {
+            InitializeComponent();
+        }
+
+
+
+
+        //for slide panel
+        private bool isPanelCollapsed = true; // Track panel state
+        private int panelWidth; // Store the panel's default width
+
+
+        //slide  panel timer 
+        private void slideTimer_Tick(object sender, EventArgs e)
+        {
+            if (isPanelCollapsed)
+            {
+                slidePanel.Width += 10; // Expand the panel
+                if (slidePanel.Width >= panelWidth)
+                {
+                    slideTimer.Stop();
+                    isPanelCollapsed = false; // Panel is now expanded
+                }
+            }
+            else
+            {
+                slidePanel.Width -= 10; // Collapse the panel
+                if (slidePanel.Width <= 45)
+                {
+                    slideTimer.Stop();
+                    isPanelCollapsed = true; // Panel is now collapsed
+                }
+            }
+        }
+
+
+
+        //form1 i.e. main
+        private void Form1_Load(object sender, EventArgs e)
+        {
+            panelWidth = slidePanel.Width;
+            slidePanel.Width = 45; // Start collapsed
+
+            //for circular pb
+            MakePictureBoxCircular(btnProfilePicture);
+
+            //  accessing current user 
+            if (UserDataManager.CurrentUser != null)
+            {
+
+                UserDataManager.ApplyProfilePicture(btnProfilePicture);
+
+                btnLogout.Visible = true;
+                btnLogout.Enabled = true;
+                btnLogin.Visible = false;
+                btnLogin.Enabled = false;
+            }
+            else
+            {
+                MessageBox.Show("No user is logged in.");
+
+                btnLogout.Visible = false;
+                btnLogout.Enabled = false;
+                btnLogin.Visible = true;
+                btnLogin.Enabled = true;
+
+            }
+
+        }
+
+        private void btnToggle_Click_1(object sender, EventArgs e)
+        {
+            slideTimer.Start(); // Start the sliding animation
+            slidePanel.BringToFront();  //to remove glitches while sliding
+
+        }
+        //slide panel ended..
+
+
+
+
+
+
+        //dashboard form
+        private void btnDashboard_Click_1(object sender, EventArgs e)
+        {
+            // Create an instance of the DashboardForm
+            DashboardForm dashboard = new DashboardForm();
+
+            // Show the Dashboard Form
+            dashboard.Show();
+
+            // Optionally, hide the MainForm
+            this.Hide();
+        }
+
+
+
+        //bmI fORM
+        private void btnBMICalculator_Click(object sender, EventArgs e)
+        {
+            // Create an instance of the BMICalculatorForm
+            BMICalculatorForm bmiCalculator = new BMICalculatorForm();
+
+            // Show the Dashboard Form
+            bmiCalculator.Show();
+
+            // Optionally, hide the MainForm
+            this.Hide();
+        }
+
+        //dietplan form
+        private void btnDietPlans_Click(object sender, EventArgs e)
+        {
+            // Create an instance of the DietPlansForm
+            DietPlansForm dietPlans = new DietPlansForm();
+
+            // Show the Dashboard Form
+            dietPlans.Show();
+
+            // Optionally, hide the MainForm
+            this.Hide();
+        }
+
+
+        //WorkoutPlan form
+        private void btnWorkoutPlans_Click(object sender, EventArgs e)
+        {
+            // Create an instance of the WorkoutPlansForm
+            WorkoutPlansForm workoutPlans = new WorkoutPlansForm();
+
+            // Show the Dashboard Form
+            workoutPlans.Show();
+
+            // Optionally, hide the MainForm
+            this.Hide();
+        }
+
+        //profile Form
+        private void btnProfile_Click(object sender, EventArgs e)
+        {
+            // Create an instance of the DashboardForm
+            ProfileForm profile = new ProfileForm();
+
+            // Show the Dashboard Form
+            profile.Show();
+
+            // Optionally, hide the MainForm
+            this.Hide();
+        }
+
+
+        // About Form
+        private void btnAbout_Click(object sender, EventArgs e)
+        {
+            // Create an instance of the DashboardForm
+            AboutForm about = new AboutForm();
+
+            // Show the Dashboard Form
+            about.Show();
+
+            // Optionally, hide the MainForm
+            this.Hide();
+        }
+
+
+        //hovering message
+        private void btnProfile_MouseEnter(object sender, EventArgs e)
+        {
+            if (UserDataManager.CurrentUser != null)
+            {
+                toolTip1.SetToolTip(btnProfilePicture, $"{UserDataManager.CurrentUser.Username}'s Profile");
+            }
+            else
+            {
+                toolTip1.SetToolTip(btnProfilePicture, "Profile");
+            }
+        }
+
+        private void btnLogout_Click(object sender, EventArgs e)
+        {
+            UserDataManager.CurrentUser = null;
+            LoginForm login = new LoginForm();
+            login.Show();
+            this.Close();
+        }
+
+        private void btnLogin_Click(object sender, EventArgs e)
+        {
+            LoginForm login = new LoginForm();
+            login.Show();
+            this.Close();
+        }
+
+
+        //for circular picture box
+        private void MakePictureBoxCircular(PictureBox pictureBox)
+        {
+            // Ensure the PictureBox has a square size
+            int diameter = Math.Min(pictureBox.Width, pictureBox.Height);
+
+            // Create a circular path
+            System.Drawing.Drawing2D.GraphicsPath path = new System.Drawing.Drawing2D.GraphicsPath();
+            path.AddEllipse(0, 0, diameter, diameter);
+
+            // Apply the circular region
+            pictureBox.Region = new Region(path);
+
+            // Set the PictureBox's SizeMode
+            pictureBox.SizeMode = PictureBoxSizeMode.Zoom;
+        }
+
+
+    }
+}
+
+
+
+Login Form
+
+using System;
+using System.Configuration;
+using System.Data.OleDb; //for ms access
+using System.Windows.Forms;
+
+namespace Gym___Fitness_App
+{
+    public partial class LoginForm : Form
+    {
+        //connection string
+        private static string connectionString = ConfigurationManager.ConnectionStrings["GymFitnessAppDbConnection"].ConnectionString;
+
+        public LoginForm()
+        {
+            InitializeComponent();
+        }
+
+
+
+        private void chkShowPassword_CheckedChanged(object sender, EventArgs e)
+        {
+            bool check = chkShowPassword.Checked;
+
+            switch (check)
+            {
+                case true:
+                    txtPassword.UseSystemPasswordChar = false;
+                    break;
+                case false:
+                    txtPassword.UseSystemPasswordChar = true;
+                    break;
+            }
+        }
+
+        private void btnLogin_Click(object sender, EventArgs e)
+        {
+            if (string.IsNullOrEmpty(txtUsername.Text))
+            {
+                txtUsername.Focus(); //isi pr focus!
+                errorUsername.SetError(this.txtUsername, "Please Enter your Username ");
+            }
+            else if (string.IsNullOrEmpty(txtPassword.Text))
+            {
+                txtPassword.Focus(); //isi pr focus!
+                errorPassword.SetError(this.txtPassword, "Please Enter your Password");
+            }
+            else
+            {
+                string username = txtUsername.Text.Trim();
+                string password = txtPassword.Text.Trim();
+
+                if (IsValidLogin(username, password))
+                {
+                    MessageBox.Show("Login Successful!", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
+
+                    User user = UserDataManager.GetUserDetails(txtUsername.Text);
+                    if (user != null && user.Password == txtPassword.Text)
+                    {
+                        UserDataManager.CurrentUser = user;
+                        MessageBox.Show($"Welcome, {UserDataManager.CurrentUser.Username}!");
+
+
+                        // Open main form
+
+                        // Navigate to MainForm
+                        MainForm mainForm = new MainForm();
+                        mainForm.Show();
+                        this.Hide();
+                    }
+
+                }
+                else
+                {
+                    MessageBox.Show("Invalid username or password.", "Login Failed", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            }
+        }
+
+        private bool IsValidLogin(string username, string password)
+        {
+            using (OleDbConnection conn = new OleDbConnection(connectionString))
+            {
+                try
+                {
+                    conn.Open();
+                    string query = "SELECT COUNT(*) FROM Users WHERE Username = ? AND Password = ?";
+
+                    using (OleDbCommand cmd = new OleDbCommand(query, conn))
+                    {
+                        // Add parameters to prevent SQL injection
+                        cmd.Parameters.AddWithValue("?", username);
+                        cmd.Parameters.AddWithValue("?", password);
+
+                        int count = (int)cmd.ExecuteScalar();
+                        return count > 0;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Error: {ex.Message}", "Database Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return false;
+                }
+            }
+        }
+
+        private void lblCreateAccount_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        {
+            SignupForm signup = new SignupForm();
+            signup.Show();
+            this.Hide();
+        }
+
+        private void txtUsername_KeyPress(object sender, KeyPressEventArgs e)
+        {
+            errorUsername.Clear();
+        }
+
+        private void txtPassword_KeyPress(object sender, KeyPressEventArgs e)
+        {
+            errorPassword.Clear();
+        }
+
+        private void lblGuest_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        {
+            MainForm mainForm = new MainForm();
+            mainForm.Show();
+            this.Hide();
+        }
+
+        private void LoginForm_VisibleChanged(object sender, EventArgs e)
+        {
+            txtUsername.Clear();
+            txtPassword.Clear();
+            txtUsername.Focus();
+        }
+    }
+}
+
+
+Signup code
+
+using System;
+using System.Configuration;
+using System.Data.OleDb;
+using System.Drawing;
+using System.IO;
+using System.Windows.Forms;
+
+namespace Gym___Fitness_App
+{
+    public partial class SignupForm : Form
+    {
+        public SignupForm()
+        {
+            InitializeComponent();
+        }
+
+        //connection string...
+        private static string connectionString = ConfigurationManager.ConnectionStrings["GymFitnessAppDbConnection"].ConnectionString;
+
+        private void SignupForm_Load(object sender, EventArgs e)
+        {
+            MakePictureBoxCircular(pbProfilePicture);
+        }
+
+
+        private void btnSignup_Click(object sender, EventArgs e)
+        {
+
+            if (string.IsNullOrEmpty(txtUsername.Text))
+            {
+                txtUsername.Focus(); //isi pr focus!
+                errorUsername.SetError(this.txtUsername, "Please Enter your name");
+            }
+            else if (string.IsNullOrEmpty(txtAge.Text))
+            {
+                txtAge.Focus(); //isi pr focus!
+                errorAge.SetError(this.txtAge, "Please Enter your Age");
+            }
+
+            else if (cmbGender.SelectedItem == null)
+            {
+                cmbGender.Focus(); //isi pr focus!
+                errorGender.SetError(this.cmbGender, "Please Enter your Gender");
+            }
+            else if (string.IsNullOrEmpty(txtPassword.Text))
+            {
+                txtPassword.Focus(); //isi pr focus!
+                errorPassword.SetError(this.txtPassword, "Please Enter your password");
+            }
+            else if (string.IsNullOrEmpty(txtConfirmPassword.Text))
+            {
+                txtConfirmPassword.Focus();
+                errorConfirmPassword.SetError(this.txtConfirmPassword, "Please Confirm your password");
+            }
+
+            else if (string.IsNullOrEmpty(txtHeight.Text))
+            {
+                txtHeight.Focus(); //isi pr focus!
+                errorHeight.SetError(this.txtHeight, "Please Enter your height");
+            }
+            else if (string.IsNullOrEmpty(txtWeight.Text))
+            {
+                txtWeight.Focus(); //isi pr focus!
+                errorWeight.SetError(this.txtWeight, "Please Enter your Weight");
+            }
+
+
+            else if (cmbFitnessGoal.SelectedItem == null)
+            {
+                cmbFitnessGoal.Focus(); //isi pr focus!
+                errorFitnessGoal.SetError(this.cmbFitnessGoal, "Please Enter your Fitness Goal ");
+            }
+            else if (cmbFitnessLevel.SelectedItem == null)
+            {
+                cmbFitnessLevel.Focus(); //isi pr focus!
+                errorFitnessLevel.SetError(this.cmbFitnessLevel, "Please Enter your Fitness Level");
+            }
+
+            else if (string.IsNullOrEmpty(txtProfilePicturePath.Text))
+            {
+                txtProfilePicturePath.Focus(); //isi pr focus!
+                errorProfilePicturePath.SetError(this.txtProfilePicturePath, "Please upload a Profile picture by clicking the Upload Button!");
+            }
+
+            else
+            {
+                // Collect user inputs
+                string username = txtUsername.Text;
+                string password = txtPassword.Text; // Consider hashing this
+                int age = int.Parse(txtAge.Text);
+                string gender = cmbGender.SelectedItem.ToString();
+                double height = double.Parse(txtHeight.Text);
+                double weight = double.Parse(txtWeight.Text);
+                double bmi = weight / ((height / 100) * (height / 100)); // Assuming height is in cm
+
+                // Calculate Target Weight Range
+                double lowerTargetWeight = 18.5 * Math.Pow((height / 100), 2); // BMI 18.5
+                double upperTargetWeight = 24.9 * Math.Pow((height / 100), 2); // BMI 24.9
+                string targetWeight = $"{Math.Round(lowerTargetWeight)}kg - {Math.Round(upperTargetWeight)}kg";
+
+                string fitnessGoal = cmbFitnessGoal.SelectedItem.ToString();
+                string fitnessLevel = cmbFitnessLevel.SelectedItem.ToString();
+
+                // Handle profile picture // Convert Profile Picture to byte array
+                byte[] profilePicture = null;
+                if (!string.IsNullOrEmpty(txtProfilePicturePath.Text))
+                {
+                    profilePicture = File.ReadAllBytes(txtProfilePicturePath.Text);
+                }
+
+
+                // Insert user details into the database
+                using (OleDbConnection connection = new OleDbConnection(connectionString))
+                {
+                    try
+                    {
+                        connection.Open();
+
+                        // SQL query to insert data
+                        //Wrap all column names in square brackets to avoid conflicts with reserved keywords.
+                        string query = "INSERT INTO Users ([Username], [Password], [Age], [Gender], [Height], [Weight], [BMI], [TargetWeight], [FitnessGoal], [FitnessLevel], [ProfilePicture]) " +
+                "VALUES (@Username, @Password, @Age, @Gender, @Height, @Weight, @BMI, @TargetWeight, @FitnessGoal, @FitnessLevel, @ProfilePicture)";
+
+
+                        using (OleDbCommand command = new OleDbCommand(query, connection))
+                        {
+                            command.Parameters.AddWithValue("@Username", username);
+                            command.Parameters.AddWithValue("@Password", password);
+                            command.Parameters.AddWithValue("@Age", age);
+                            command.Parameters.AddWithValue("@Gender", gender);
+                            command.Parameters.AddWithValue("@Height", height);
+                            command.Parameters.AddWithValue("@Weight", weight);
+                            command.Parameters.AddWithValue("@BMI", bmi);
+                            command.Parameters.AddWithValue("@TargetWeight", targetWeight);
+                            command.Parameters.AddWithValue("@FitnessGoal", fitnessGoal);
+                            command.Parameters.AddWithValue("@FitnessLevel", fitnessLevel);
+                            command.Parameters.AddWithValue("@ProfilePicture", profilePicture ?? (object)DBNull.Value);
+
+                            command.ExecuteNonQuery();
+                            MessageBox.Show("Sign-Up Successful!", "Success");
+
+                            // Open the login form and close the current form
+                            LoginForm loginForm = new LoginForm();
+                            loginForm.Show();
+                            this.Close();
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show($"An error occurred: {ex.Message}", "Database Error");
+                    }
+                }
+
+
+            }
+        }
+
+        //upload btn
+        private void btnUploadPicture_Click(object sender, EventArgs e)
+        {
+            errorProfilePicturePath.Clear();
+            // Open a file dialog to select an image
+            OpenFileDialog openFileDialog = new OpenFileDialog
+            {
+                Filter = "Image Files|*.jpg;*.jpeg;*.png;*.bmp",
+                Title = "Select a Profile Picture"
+            };
+
+            if (openFileDialog.ShowDialog() == DialogResult.OK)
+            {
+                txtProfilePicturePath.Text = openFileDialog.FileName;
+                pbProfilePicture.Image = System.Drawing.Image.FromFile(openFileDialog.FileName);
+            }
+        }
+
+
+
+
+        //jab textbox leave krne lage
+        private void txtUsername_Leave(object sender, EventArgs e)
+        {
+
+        }
+
+        private void txtAge_KeyPress(object sender, KeyPressEventArgs e)
+        {
+            errorAge.Clear();
+            char ch = e.KeyChar;
+            if (char.IsDigit(ch) == true)
+            {
+                e.Handled = false;   //if e.handled is true, it will not let anything to be typed!
+            }
+            else if (ch == 8)  //8 represents backspace , ASCII code 8, BS or Backspace
+            {
+                e.Handled = false;
+            }
+            else
+            {
+                e.Handled = true;
+            }
+        }
+
+        private void txtHeight_KeyPress(object sender, KeyPressEventArgs e)
+        {
+            errorHeight.Clear();
+            char ch = e.KeyChar;
+            if (char.IsDigit(ch) == true)
+            {
+                e.Handled = false;   //if e.handled is true, it will not let anything to be typed!
+            }
+            else if (ch == 8)  //8 represents backspace , ASCII code 8, BS or Backspace
+            {
+                e.Handled = false;
+            }
+            else if (ch == 46)  //ASCII code 46, for period(.)
+            {
+                e.Handled = false;
+            }
+            else
+            {
+                e.Handled = true;
+            }
+        }
+
+        private void txtWeight_KeyPress(object sender, KeyPressEventArgs e)
+        {
+            errorWeight.Clear();
+            char ch = e.KeyChar;
+            if (char.IsDigit(ch) == true)
+            {
+                e.Handled = false;   //if e.handled is true, it will not let anything to be typed!
+            }
+            else if (ch == 8)  //8 represents backspace , ASCII code 8, BS or Backspace
+            {
+                e.Handled = false;
+            }
+            else if (ch == 46)  //ASCII code 46, for period(.)
+            {
+                e.Handled = false;
+            }
+            else
+            {
+                e.Handled = true;
+            }
+        }
+
+        private void txtBMI_KeyPress(object sender, KeyPressEventArgs e)
+        {
+            errorBMI.Clear();
+            char ch = e.KeyChar;
+            if (char.IsDigit(ch) == true)
+            {
+                e.Handled = false;   //if e.handled is true, it will not let anything to be typed!
+            }
+            else if (ch == 8)  //8 represents backspace , ASCII code 8, BS or Backspace
+            {
+                e.Handled = false;
+            }
+            else if (ch == 46)  //ASCII code 46, for period(.)
+            {
+                e.Handled = false;
+            }
+            else
+            {
+                e.Handled = true;
+            }
+        }
+
+        private void txtUsername_KeyPress(object sender, KeyPressEventArgs e)
+        {
+            errorUsername.Clear();
+            char ch = e.KeyChar;
+            if (char.IsLetter(ch) == true)
+            {
+                e.Handled = false;   //if e.handled is true, it will not let anything to be typed!
+            }
+            else if (ch == 8)        //8 represents backspace , ASCII code 8, BS or Backspace
+            {
+                e.Handled = false;
+            }
+            else if (ch == 32)        //ASCII code 46, for space bar
+            {
+                e.Handled = false;
+            }
+            else
+            {
+                e.Handled = true;
+            }
+        }
+
+
+        private void cmbGender_KeyPress(object sender, KeyPressEventArgs e)
+        {
+
+            e.Handled = true;
+        }
+
+        private void cmbFitnessGoal_KeyPress(object sender, KeyPressEventArgs e)
+        {
+            e.Handled = true;
+
+        }
+
+        private void cmbFitnessLevel_KeyPress(object sender, KeyPressEventArgs e)
+        {
+            e.Handled = true;
+
+        }
+        private void txtProfilePicturePath_KeyPress(object sender, KeyPressEventArgs e)
+        {
+            e.Handled = true;
+        }
+
+        private void btnReset_Click(object sender, EventArgs e)
+        {
+
+            txtUsername.Clear();
+            txtPassword.Clear();
+            txtConfirmPassword.Clear();
+            txtAge.Clear();
+            txtHeight.Clear();
+            txtWeight.Clear();
+            cmbFitnessGoal.SelectedItem = null;
+            cmbFitnessLevel.SelectedItem = null;
+            cmbGender.SelectedItem = null;
+            txtProfilePicturePath.Clear();
+
+            pbProfilePicture.Image = Properties.Resources.usernew;
+
+            //to clear erorrs
+            errorUsername.Clear();
+            errorConfirmPassword.Clear();
+            errorPassword.Clear();
+            errorAge.Clear();
+            errorWeight.Clear();
+            errorHeight.Clear();
+            errorBMI.Clear();
+            errorTargetWeight.Clear();
+            errorProfilePicturePath.Clear();
+        }
+
+
+
+        private void txtConfirmPassword_TextChanged(object sender, EventArgs e)
+        {
+            if (txtConfirmPassword.Text != txtPassword.Text)
+            {
+                txtConfirmPassword.Focus();
+                errorConfirmPassword.SetError(txtConfirmPassword, "Password must be same");
+            }
+            else
+            {
+                errorConfirmPassword.Clear();
+            }
+
+        }
+
+        private void txtPassword_KeyPress(object sender, KeyPressEventArgs e)
+        {
+            errorPassword.Clear();
+        }
+
+        private void txtTargetWeight_KeyPress(object sender, KeyPressEventArgs e)
+        {
+            errorTargetWeight.Clear();
+        }
+
+
+        //to remove error from combo boxes
+
+        private void cmbGender_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (cmbGender.SelectedItem != null)
+            {
+                errorGender.Clear();
+            }
+        }
+
+        private void cmbFitnessGoal_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (cmbFitnessGoal.SelectedItem != null)
+            {
+                errorFitnessGoal.Clear();
+            }
+        }
+
+        private void cmbFitnessLevel_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (cmbFitnessLevel.SelectedItem != null)
+            {
+                errorFitnessLevel.Clear();
+            }
+        }
+
+        private void txtProfilePicturePath_Click(object sender, EventArgs e)
+        {
+            if (string.IsNullOrEmpty(txtProfilePicturePath.Text))
+            {
+                txtProfilePicturePath.Focus(); //isi pr focus!
+                errorProfilePicturePath.SetError(this.txtProfilePicturePath, "Please upload a Profile picture by clicking the Upload Button!");
+            }
+            else
+            {
+                errorProfilePicturePath.Clear();
+            }
+        }
+
+
+
+        //for circular picture box
+        private void MakePictureBoxCircular(PictureBox pictureBox)
+        {
+            // Ensure the PictureBox has a square size
+            int diameter = Math.Min(pictureBox.Width, pictureBox.Height);
+
+            // Create a circular path
+            System.Drawing.Drawing2D.GraphicsPath path = new System.Drawing.Drawing2D.GraphicsPath();
+            path.AddEllipse(0, 0, diameter, diameter);
+
+            // Apply the circular region
+            pictureBox.Region = new Region(path);
+
+            // Set the PictureBox's SizeMode
+            pictureBox.SizeMode = PictureBoxSizeMode.Zoom;
+        }
+
+    }
+}
+
+
+
+
+Profile code
+
+using System;
+using System.Drawing;
+using System.IO;
+using System.Windows.Forms;
+
+namespace Gym___Fitness_App
+{
+    public partial class ProfileForm : Form
+    {
+        public ProfileForm()
+        {
+            InitializeComponent();
+        }
+
+
+        //LOAD
+        private void ProfileForm_Load(object sender, EventArgs e)
+        {
+            //slide panel
+            panelWidth = slidePanel.Width;
+            slidePanel.Width = 45; // Start collapsed
+
+            //round pb
+            MakePictureBoxCircular(pbProfilePicture);
+
+            if (UserDataManager.CurrentUser != null)
+            {
+                UserDataManager.ApplyProfilePicture(pbProfilePicture);
+
+                nudCurrentHeight.Value = (decimal)UserDataManager.CurrentUser.Height;
+                nudCurrentWeight.Value = (decimal)UserDataManager.CurrentUser.Weight;
+
+                btnLogout.Visible = true;
+                btnLogout.Enabled = true;
+                btnLogin.Visible = false;
+                btnLogin.Enabled = false;
+
+                if (UserDataManager.CurrentUser != null)
+                {
+                    lblUsername.Text = UserDataManager.CurrentUser.Username;
+                    lblAge.Text = UserDataManager.CurrentUser.Age.ToString();
+                    lblGender.Text = UserDataManager.CurrentUser.Gender;
+                    lblHeight.Text = $"{UserDataManager.CurrentUser.Height} cm";
+                    lblWeight.Text = $"{UserDataManager.CurrentUser.Weight} kg";
+                    lblBMI.Text = UserDataManager.CurrentUser.BMI.ToString("F2");
+                    lblTargetWeight.Text = UserDataManager.CurrentUser.TargetWeight;
+                    lblFitnessGoal.Text = UserDataManager.CurrentUser.FitnessGoal;
+                    lblFitnessLevel.Text = UserDataManager.CurrentUser.FitnessLevel;
+
+
+                    //membership status
+                    lblMembershipStatus.Text = $"{UserDataManager.CurrentUser.MembershipStatus}";
+
+
+
+                }
+                else
+                {
+                    MessageBox.Show("Error fetching user data.", "Error");
+                }
+
+
+                //load membership plan pics
+                if (lblMembershipStatus.Text == "Free")
+                {
+                    pbMembershipStatus.Image = Properties.Resources.free3;
+                }
+                else if (lblMembershipStatus.Text == "Premium")
+                {
+                    lblMembershipStatus.ForeColor = Color.Purple;
+                    pbMembershipStatus.Image = Properties.Resources.crown1;
+                }
+                else
+                {
+                    pbMembershipStatus.Image = null;
+                }
+
+
+            }
+            else
+            {
+                MessageBox.Show("No user is logged in.");
+
+                btnLogout.Visible = false;
+                btnLogout.Enabled = false;
+                btnLogin.Visible = true;
+                btnLogin.Enabled = true;
+
+            }
+
+        }
+
+
+
+
+        //for slide panel
+        private bool isPanelCollapsed = true; // Track panel state
+        private int panelWidth; // Store the panel's default width
+
+
+        //slide  panel timer 
+        private void slideTimer_Tick(object sender, EventArgs e)
+        {
+            if (isPanelCollapsed)
+            {
+                //pnlMain.BackColor = Color.LimeGreen; //change the color of main panel
+                slidePanel.Width += 10; // Expand the panel
+                if (slidePanel.Width >= panelWidth)
+                {
+                    slideTimer.Stop();
+                    isPanelCollapsed = false; // Panel is now expanded
+                }
+            }
+            else
+            {
+                //pnlMain.BackColor = Color.LightGreen; //change the color of main panel
+                slidePanel.Width -= 10; // Collapse the panel
+                if (slidePanel.Width <= 45)
+                {
+                    slideTimer.Stop();
+                    isPanelCollapsed = true; // Panel is now collapsed
+                }
+            }
+        }
+
+        //menu
+        private void btnToggle_Click_1(object sender, EventArgs e)
+        {
+            slideTimer.Start(); // Start the sliding animation
+            slidePanel.BringToFront();  //to remove glitches while sliding
+        }
+
+
+
+
+
+        //go back to dashboard
+        private void btnBackToDashboard_Click(object sender, EventArgs e)
+        {
+            MainForm home = new MainForm();
+            home.Show();
+            this.Hide();
+        }
+
+
+        //home Button
+        private void btnHome_Click_1(object sender, EventArgs e)
+        {
+            MainForm home = new MainForm();
+            home.Show();
+            this.Hide();
+        }
+
+        //bmi calculator button
+        private void btnBMICalculator_Click_1(object sender, EventArgs e)
+        {
+            BMICalculatorForm bmiCalculator = new BMICalculatorForm();
+            bmiCalculator.Show();
+            this.Hide();
+        }
+
+        //dietplan form
+        private void btnDietPlans_Click_1(object sender, EventArgs e)
+        {
+            DietPlansForm dietPlans = new DietPlansForm();
+            dietPlans.Show();
+            this.Hide();
+        }
+
+        //WorkoutPlan form
+        private void btnWorkoutPlans_Click_1(object sender, EventArgs e)
+        {
+            WorkoutPlansForm workoutPlans = new WorkoutPlansForm();
+            workoutPlans.Show();
+            this.Hide();
+        }
+
+
+
+
+        // About Form
+        private void btnAbout_Click_1(object sender, EventArgs e)
+        {
+            AboutForm about = new AboutForm();
+            about.Show();
+            this.Hide();
+        }
+
+        private void btnDashboard_Click(object sender, EventArgs e)
+        {
+            DashboardForm dashboard = new DashboardForm();
+            dashboard.Show();
+            this.Hide();
+        }
+
+        private void btnGetMembershipPlan_Click(object sender, EventArgs e)
+        {
+            if (UserDataManager.CurrentUser != null)
+            {
+                MembershipForm membershipForm = new MembershipForm();
+                membershipForm.ShowDialog();
+                lblMembershipStatus.Text = $"{UserDataManager.CurrentUser.MembershipStatus}";
+
+                //membership pln pic
+                //load membership plan pics
+                if (lblMembershipStatus.Text == "Free")
+                {
+                    pbMembershipStatus.Image = Properties.Resources.free3;
+                }
+                else if (lblMembershipStatus.Text == "Premium")
+                {
+                    lblMembershipStatus.ForeColor = Color.Purple;
+                    pbMembershipStatus.Image = Properties.Resources.crown1;
+                }
+                else
+                {
+                    pbMembershipStatus.Image = null;
+                }
+            }
+            else
+            {
+                MessageBox.Show("No user is logged in.");
+            }
+
+        }
+
+
+        //change profile pic
+
+        private void btnChangeProfilePicture_Click(object sender, EventArgs e)
+        {
+            if (UserDataManager.CurrentUser != null)
+            {
+                using (OpenFileDialog openFileDialog = new OpenFileDialog())
+                {
+                    openFileDialog.Filter = "Image Files|*.jpg;*.jpeg;*.png;*.bmp"; if (openFileDialog.ShowDialog() == DialogResult.OK)
+                    {
+                        string selectedFilePath = openFileDialog.FileName; byte[] profilePicture = File.ReadAllBytes(selectedFilePath);
+                        // Update the profile picture in the PictureBox
+                        using (MemoryStream ms = new MemoryStream(profilePicture))
+                        {
+                            pbProfilePicture.Image = Image.FromStream(ms);
+                        }
+                        // Save the new profile picture
+                        UserDataManager.UpdateProfilePictureInDatabase(profilePicture);
+                    }
+                }
+            }
+            else
+            {
+                MessageBox.Show("You need to login First !");
+            }
+        }
+
+
+        private Color GetBMIColor(double bmi)
+        {
+            if (bmi < 18.5)
+                return Color.Blue;
+            else if (bmi >= 18.5 && bmi <= 24.9)
+                return Color.Green;
+            else if (bmi >= 25 && bmi <= 29.9)
+                return Color.YellowGreen;
+            else if (bmi >= 30 && bmi <= 35)
+                return Color.DarkOrange;
+            else
+                return Color.Red;
+        }
+
+
+        private string GetBMICategory(double bmi)
+        {
+            if (bmi < 18.5)
+                return "Underweight!";
+            else if (bmi >= 18.5 && bmi <= 24.9)
+                return "Normal.";
+            else if (bmi >= 25 && bmi <= 29.9)
+                return "Overweight!";
+            else if (bmi >= 30 && bmi <= 35)
+                return "Obese!!";
+            else
+                return "Extremely Obese!!!";
+        }
+
+        private void lblBMI_TextChanged(object sender, EventArgs e)
+        {
+            double bmi = Double.Parse(lblBMI.Text);
+            lblBMI.ForeColor = GetBMIColor(bmi);
+            lblBMICategory.Text = GetBMICategory(bmi);
+        }
+
+        private void btnSaveCurrentHeightAndWeight_Click(object sender, EventArgs e)
+        {
+            if (UserDataManager.CurrentUser != null)
+            {
+                if ((nudCurrentWeight.Value >= 0 && nudCurrentWeight.Value <= 250) && (nudCurrentHeight.Value >= 0 && nudCurrentWeight.Height <= 270))
+                {
+                    UserDataManager.CurrentUser.Weight = (double)nudCurrentWeight.Value;
+                    UserDataManager.CurrentUser.Height = (double)nudCurrentHeight.Value;
+
+                    double height = (double)nudCurrentHeight.Value;
+                    double weight = (double)nudCurrentWeight.Value;
+
+                    UserDataManager.CurrentUser.BMI = CalculateBMI(height, weight);
+                    UserDataManager.UpdateHeightAndWeight(UserDataManager.CurrentUser.Height, UserDataManager.CurrentUser.Weight, UserDataManager.CurrentUser.BMI);
+                    MessageBox.Show("Height and weight updated successfully!", "Success!");
+                }
+                else
+                {
+                    MessageBox.Show("Aree Bhai height or weight ki correct values put karo!");
+                }
+            }
+            else
+            {
+                MessageBox.Show("You need to login First !");
+            }
+        }
+
+
+        private double CalculateBMI(double height, double weight)
+        {
+            height = height / 100; // Convert height from cm to meters
+            return weight / (height * height);
+
+        }
+
+
+
+        private void MakePictureBoxCircular(PictureBox pictureBox)
+        {
+            // Ensure the PictureBox has a square size
+            int diameter = Math.Min(pictureBox.Width, pictureBox.Height);
+
+            // Create a circular path
+            System.Drawing.Drawing2D.GraphicsPath path = new System.Drawing.Drawing2D.GraphicsPath();
+            path.AddEllipse(0, 0, diameter, diameter);
+
+            // Apply the circular region
+            pictureBox.Region = new Region(path);
+
+            // Set the PictureBox's SizeMode
+            pictureBox.SizeMode = PictureBoxSizeMode.Zoom;
+        }
+
+        private void btnRefresh_Click(object sender, EventArgs e)
+        {
+            if (UserDataManager.CurrentUser != null)
+            {
+                lblHeight.Text = $"{UserDataManager.CurrentUser.Height} cm";
+                lblWeight.Text = $"{UserDataManager.CurrentUser.Weight} kg";
+                lblBMI.Text = UserDataManager.CurrentUser.BMI.ToString("F2");
+                lblMembershipStatus.Text = $"{UserDataManager.CurrentUser.MembershipStatus}";
+
+            }
+        }
+
+        private void btnRefresh_MouseEnter(object sender, EventArgs e)
+        {
+            toolTipRefresh.SetToolTip(btnRefresh, "Refresh");
+        }
+
+        private void btnLogin_Click(object sender, EventArgs e)
+        {
+            LoginForm login = new LoginForm();
+            login.Show();
+            this.Close();
+        }
+
+        private void btnLogout_Click(object sender, EventArgs e)
+        {
+            UserDataManager.CurrentUser = null;
+            LoginForm login = new LoginForm();
+            login.Show();
+            this.Close();
+        }
+
+        private void btnDeleteAccount_Click(object sender, EventArgs e)
+        {
+            if (UserDataManager.CurrentUser != null)
+            {
+                // Confirmation dialog
+                DialogResult confirmResult = MessageBox.Show(
+                    "Are you sure you want to delete your account? This action cannot be undone.",
+                    "Delete Account",
+                    MessageBoxButtons.YesNo,
+                    MessageBoxIcon.Warning);
+                if (confirmResult == DialogResult.Yes)
+                {
+
+
+                    if (UserDataManager.DeleteAccount(UserDataManager.CurrentUser.UserID))
+                    {
+
+
+                        MessageBox.Show("Your account has been deleted successfully.", "Account Deleted", MessageBoxButtons.OK, MessageBoxIcon.Information);
+
+                        this.Hide();
+                        LoginForm loginForm = new LoginForm();
+                        loginForm.Show();
+                    }
+                    else
+                    {
+                        MessageBox.Show("An error occurred while deleting your account. Please try again.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
+                }
+                else
+                {
+                    // User canceled password input
+                    MessageBox.Show("Account deletion aborted.", "Operation Canceled", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+
+
+            }
+            else
+            {
+                MessageBox.Show("Wah bhai Login kia nahi, or chle account ko delete krne 😒");
+            }
+        }
+
+
+
+
+    }
+}
+
+
+Dashboard
+
+
+using System;
+using System.Configuration;
+using System.Data.OleDb;
+using System.Drawing;
+using System.Windows.Forms;
+
+namespace Gym___Fitness_App
+{
+    public partial class DashboardForm : Form
+    {
+        public DashboardForm()
+        {
+            InitializeComponent();
+        }
+
+        //connection string...
+        private static string connectionString = ConfigurationManager.ConnectionStrings["GymFitnessAppDbConnection"].ConnectionString;
+
+
+        //LOAD
+        private void DashboardForm_Load(object sender, EventArgs e)
+        {
+            //clock
+            timerTime.Start();
+
+            //quote
+            timerQuote.Start(); // Start the timer
+
+            //date
+            lblDate.Text = DateTime.Now.ToString("dddd, MMMM dd, yyyy");
+
+            //slide panel
+            panelWidth = slidePanel.Width;
+            slidePanel.Width = 45; // Start collapsed
+
+            //circular pb
+            MakePictureBoxCircular(btnProfilePicture);
+
+
+            //  accessing current user 
+            if (UserDataManager.CurrentUser != null)
+            {
+
+                UserDataManager.ApplyProfilePicture(btnProfilePicture);
+
+                //
+                btnLogout.Visible = true;
+                btnLogout.Enabled = true;
+                btnLogin.Visible = false;
+                btnLogin.Enabled = false;
+
+                // Weight Progress
+
+                double lowerTargetWeight = 18.5 * Math.Pow((UserDataManager.CurrentUser.Height / 100), 2);
+                double upperTargetWeight = 24.9 * Math.Pow((UserDataManager.CurrentUser.Height / 100), 2);
+
+                double weightProgressPercentage = Math.Max(0, Math.Min(100, ((UserDataManager.CurrentUser.Weight - lowerTargetWeight) / (upperTargetWeight - lowerTargetWeight)) * 100));
+
+
+                progressBarWeight.Value = (int)weightProgressPercentage;
+                lblWeightProgess.Text = $"Weight Progress: {Math.Round(weightProgressPercentage)}%";
+
+                // Water Intake Progress
+
+                int dailyWaterIntake = 8; // Goal: 8 glasses of water
+                int currentGlasses = (int)(UserDataManager.CurrentUser.DailyWaterIntake / 0.25); // Each glass = 0.25L
+
+
+                // Calculate water progress
+                double waterProgressPercentage = Math.Min(100, (currentGlasses / (double)dailyWaterIntake) * 100);
+                progressBarWater.Value = (int)waterProgressPercentage;
+
+                lblWaterProgress.Text = $"{waterProgressPercentage}%";
+
+                Console.WriteLine($"Height: {UserDataManager.CurrentUser.Height}");
+                Console.WriteLine($"Weight: {UserDataManager.CurrentUser.Weight}");
+                Console.WriteLine($"Lower Target: {lowerTargetWeight}");
+                Console.WriteLine($"Upper Target: {upperTargetWeight}");
+                Console.WriteLine($"Progress Percentage: {weightProgressPercentage}");
+
+
+                //water reset timer
+                waterResetTimer.Start();
+            }
+            else
+            {
+                //MessageBox.Show("No user is logged in.");
+
+                btnLogout.Visible = false;
+                btnLogout.Enabled = false;
+                btnLogin.Visible = true;
+                btnLogin.Enabled = true;
+            }
+
+        }
+
+        //for slide panel
+        private bool isPanelCollapsed = true; // Track panel state
+        private int panelWidth; // Store the panel's default width
+
+
+        //slide  panel timer 
+        private void slideTimer_Tick_1(object sender, EventArgs e)
+        {
+            if (isPanelCollapsed)
+            {
+                //pnlMain.BackColor = Color.LimeGreen; //change the color of main panel
+                slidePanel.Width += 10; // Expand the panel
+                if (slidePanel.Width >= panelWidth)
+                {
+                    slideTimer.Stop();
+                    isPanelCollapsed = false; // Panel is now expanded
+                }
+            }
+            else
+            {
+                //pnlMain.BackColor = Color.LightGreen; //change the color of main panel
+                slidePanel.Width -= 10; // Collapse the panel
+                if (slidePanel.Width <= 45)
+                {
+                    slideTimer.Stop();
+                    isPanelCollapsed = true; // Panel is now collapsed
+                }
+            }
+        }
+
+        //menu
+        private void btnToggle_Click(object sender, EventArgs e)
+        {
+            slideTimer.Start(); // Start the sliding animation
+            slidePanel.BringToFront();  //to remove glitches while sliding
+
+        }
+
+
+
+
+        //code for clock
+        private void timer1_Tick_1(object sender, EventArgs e)
+        {
+            lblClock.Text = DateTime.Now.ToString("hh:mm:ss tt");
+        }
+
+        //For motivational quotes
+        private string[] quotes = {
+                "Believe in yourself!",
+                "You are stronger than you think!",
+                "Every day is a second chance.",
+                "Hard work pays off!",
+                "Success is a journey, not a destination.",
+                "Dream big.",
+                "Stay positive.",
+                "Make it happen.",
+                "New beginnings.",
+                "Keep going.",
+                "Your only limit is your mind.",
+                "Push yourself.",
+                "Go out and get it.",
+                "Feel the achievement.",
+                "Don't stop.",
+                "Thank yourself later.",
+                "Little things matter.",
+                "Hard does not mean impossible.",
+                "Create opportunity.",
+                "Discover your strengths.",
+                "Focus on goals.",
+                "Believe you can.",
+                "Wake up determined.",
+                "Tomorrow never comes!",
+                "Love what you do.",
+                "Don't limit your challenges",
+                "Challenge your limits!"
+
+        };
+
+
+        private int currentQuoteIndex = 0;
+        private int currentCharIndex = 0;
+        private bool isTypingForward = true;
+        private int pauseCounter = 0;
+        private int pauseDuration = 13; // Adjust pause duration as needed
+
+        private void timer2_Tick(object sender, EventArgs e)
+        {
+            if (isTypingForward)
+            {
+                if (currentCharIndex < quotes[currentQuoteIndex].Length)
+                {
+                    lblQuote.Text += quotes[currentQuoteIndex][currentCharIndex];
+                    currentCharIndex++;
+                }
+                else
+                {
+                    pauseCounter++;
+                    if (pauseCounter >= pauseDuration)
+                    {
+                        isTypingForward = false;
+                        pauseCounter = 0;
+                        currentCharIndex--;
+                    }
+                }
+            }
+            else
+            {
+                if (currentCharIndex >= 0)
+                {
+                    lblQuote.Text = lblQuote.Text.Substring(0, currentCharIndex);
+                    currentCharIndex--;
+                }
+                else
+                {
+                    isTypingForward = true;
+                    currentCharIndex = 0;
+                    currentQuoteIndex = (currentQuoteIndex + 1) % quotes.Length;
+                    lblQuote.Text = string.Empty; // Clear the label for the next quote
+                }
+            }
+        }
+
+
+        //Progress bar(water intake)
+        private void btnCompleteWorkout_Click_1(object sender, EventArgs e)
+        {
+            UpdateProgress();
+        }
+        private void UpdateProgress()
+        {
+            // Example: Increment progress by 13
+            progressBarWater.Value = Math.Min(progressBarWater.Value + 13, progressBarWater.Maximum);
+        }
+
+
+
+
+
+
+        //challenges..
+        private string[] challenges =
+        {
+            // Existing challenges
+            "Do a 15-minute stretching routine.",
+            "Do 10 Pull-ups.",
+            "Do 20 Push-ups.",
+            "Do 15 squats.",
+            "Do a dynamic warm-up before your workout.",
+            "Stretch your Whole body for 5 minutes.",
+            "Drink a glass of water before each meal.",
+            "Replace one sugary drink with water.",
+            "Carry a water bottle with you all day.",
+            "Drink a glass of water first thing in the morning.",
+            "Set a timer to remind you to drink water every hour.",
+            "Write in a journal for 10 minutes. for mental Health!",
+            "Practice deep breathing exercises.",
+            "Spend 15 minutes in nature.",
+            "Read a chapter of a book.",
+            "Disconnect from screens for an hour.",
+            "Eat 5 servings of fruits and vegetables.",
+            "Try a new smoothie recipe.",
+            "Avoid junk foods for a day.",
+            "Prepare a healthy meal from scratch.",
+            "Track your calorie intake.",
+            "Complete a 5Km run.",
+            "Do a 30-minute HIIT workout.",
+            "Perform 50 sit-ups.",
+            "Hold a plank for 2 minutes.",
+
+            "Do 50 jumping jacks.",
+            "Take a 30-minute brisk walk.",
+            "Do a 10-minute meditation session.",
+            "Try a new yoga pose.",
+            "Do 3 sets of 10 lunges.",
+            "Run up and down the stairs for 5 minutes.",
+            "Do 20 burpees.",
+            "Try a new healthy recipe.",
+            "Do a 5-minute cool-down after your workout.",
+            "Take a 10-minute power nap.",
+            "Do 3 sets of 15 tricep dips.",
+            "Spend 10 minutes practicing mindfulness.",
+            "Do 3 sets of 20 calf raises.",
+            "Try a new fruit or vegetable.",
+            "Do a 10-minute core workout.",
+            "Spend 10 minutes stretching your hamstrings.",
+            "Do 3 sets of 10 bicep curls.",
+            "Take a 15-minute walk after dinner.",
+            "Do 3 sets of 15 shoulder presses.",
+            "Spend 10 minutes practicing gratitude.",
+            "Do a 10-minute cardio workout.",
+            "Try a new fitness app or workout video.",
+            "Do 3 sets of 20 leg raises.",
+            "Spend 10 minutes stretching your back.",
+            "Do 3 sets of 15 chest presses."
+        };
+
+
+
+
+        private void btnChallenge_Click_1(object sender, EventArgs e)
+        {
+            Random random = new Random();
+            int index = random.Next(challenges.Length);
+            lblChallenge.Text = challenges[index];
+        }
+
+
+        //profile button
+        private void btnProfilePicture_Click(object sender, EventArgs e)
+        {
+            ProfileForm profile = new ProfileForm();
+            profile.Show();
+            this.Hide();
+        }
+
+
+
+        //home Button
+        private void btnHome_Click(object sender, EventArgs e)
+        {
+            MainForm home = new MainForm();
+            home.Show();
+            this.Hide();
+        }
+
+        //bmi calculator button
+        private void btnBMICalculator_Click(object sender, EventArgs e)
+        {
+            BMICalculatorForm bmiCalculator = new BMICalculatorForm();
+            bmiCalculator.Show();
+            this.Hide();
+        }
+
+        //dietplan form
+        private void btnDietPlans_Click_1(object sender, EventArgs e)
+        {
+            DietPlansForm dietPlans = new DietPlansForm();
+            dietPlans.Show();
+            this.Hide();
+        }
+
+        //WorkoutPlan form
+        private void btnWorkoutPlans_Click_1(object sender, EventArgs e)
+        {
+            WorkoutPlansForm workoutPlans = new WorkoutPlansForm();
+            workoutPlans.Show();
+            this.Hide();
+        }
+
+
+
+
+        // About Form
+        private void btnAbout_Click(object sender, EventArgs e)
+        {
+            AboutForm about = new AboutForm();
+            about.Show();
+            this.Hide();
+        }
+
+        private void btnProfile_MouseEnter(object sender, EventArgs e)
+        {
+            toolTip1.SetToolTip(btnProfilePicture, "Profile");
+        }
+
+
+        private void btnAddWater_Click(object sender, EventArgs e)
+        {
+            if (UserDataManager.CurrentUser != null)
+            {
+
+                if (UserDataManager.CurrentUser.DailyWaterIntake == 0)
+                {
+                    UserDataManager.CurrentUser.DailyWaterIntake = 0; // Initialize if null
+                }
+
+                double glassSize = 0.25; // Glass size in liters
+                UserDataManager.CurrentUser.DailyWaterIntake += glassSize;
+
+                // Update the database
+
+                using (OleDbConnection connection = new OleDbConnection(connectionString))
+                {
+                    string query = "UPDATE Users SET DailyWaterIntake = @DailyWaterIntake WHERE Username = @Username";
+
+                    using (OleDbCommand command = new OleDbCommand(query, connection))
+                    {
+                        command.Parameters.AddWithValue("@DailyWaterIntake", UserDataManager.CurrentUser.DailyWaterIntake);
+                        command.Parameters.AddWithValue("@Username", UserDataManager.CurrentUser.Username);
+
+                        connection.Open();
+                        command.ExecuteNonQuery();
+                    }
+                }
+
+                //    // Refresh progress bar
+                //    DashboardForm_Load(null, null);
+            }
+            else
+            {
+                MessageBox.Show("No user is logged in.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+
+
+        private void ResetDailyWaterIntake()
+        {
+            UserDataManager.CurrentUser.DailyWaterIntake = 0;
+
+            // Update the database
+
+            using (OleDbConnection connection = new OleDbConnection(connectionString))
+            {
+                string query = "UPDATE Users SET DailyWaterIntake = 0 WHERE Username = @Username";
+
+                using (OleDbCommand command = new OleDbCommand(query, connection))
+                {
+                    command.Parameters.AddWithValue("@Username", UserDataManager.CurrentUser.Username);
+
+                    connection.Open();
+                    command.ExecuteNonQuery();
+                }
+            }
+
+            // Refresh progress bar
+            DashboardForm_Load(null, null);
+            MessageBox.Show("Daily water intake reset.", "Reset Successful");
+        }
+
+        private void waterResetTimer_Tick(object sender, EventArgs e)
+        {
+            if (DateTime.Now.Hour == 0 && DateTime.Now.Minute == 0) // Midnight
+            {
+                ResetDailyWaterIntake();
+            }
+        }
+
+        private void progressBarWeight_MouseEnter(object sender, EventArgs e)
+        {
+            if (UserDataManager.CurrentUser != null)
+            {
+                double lowerTargetWeight = 18.5 * Math.Pow((UserDataManager.CurrentUser.Height / 100), 2);
+                double upperTargetWeight = 24.9 * Math.Pow((UserDataManager.CurrentUser.Height / 100), 2);
+
+                toolTipProgressWeight.SetToolTip(progressBarWeight, $"Current Weight: {UserDataManager.CurrentUser.Weight}\nTarget Range: {Math.Round(lowerTargetWeight, 1)}kg - {Math.Round(upperTargetWeight, 1)}kg");
+            }
+            else
+            {
+                toolTipProgressWeight.SetToolTip(progressBarWeight, $"Login krle bhai");
+            }
+        }
+
+
+        //for circular picture box
+        private void MakePictureBoxCircular(PictureBox pictureBox)
+        {
+            // Ensure the PictureBox has a square size
+            int diameter = Math.Min(pictureBox.Width, pictureBox.Height);
+
+            // Create a circular path
+            System.Drawing.Drawing2D.GraphicsPath path = new System.Drawing.Drawing2D.GraphicsPath();
+            path.AddEllipse(0, 0, diameter, diameter);
+
+            // Apply the circular region
+            pictureBox.Region = new Region(path);
+
+            // Set the PictureBox's SizeMode
+            pictureBox.SizeMode = PictureBoxSizeMode.Zoom;
+        }
+
+        private void btnLogin_Click(object sender, EventArgs e)
+        {
+            LoginForm login = new LoginForm();
+            login.Show();
+            this.Close();
+        }
+
+        private void btnLogout_Click(object sender, EventArgs e)
+        {
+            UserDataManager.CurrentUser = null;
+            LoginForm login = new LoginForm();
+            login.Show();
+            this.Close();
+        }
+
+        private void btnProfilePicture_MouseEnter(object sender, EventArgs e)
+        {
+            if (UserDataManager.CurrentUser != null)
+            {
+                toolTip1.SetToolTip(btnProfilePicture, $"{UserDataManager.CurrentUser.Username}'s Profile");
+            }
+            else
+            {
+                toolTip1.SetToolTip(btnProfilePicture, "Profile");
+            }
+        }
+    }
+}
+
+
+
+BMI Calculator
+
+using System;
+using System.Drawing;
+using System.Windows.Forms;
+
+namespace Gym___Fitness_App
+{
+    public partial class BMICalculatorForm : Form
+    {
+        public BMICalculatorForm()
+        {
+            InitializeComponent();
+        }
+
+        //load
+        private void BMICalculatorForm_Load(object sender, EventArgs e)
+        {
+            //slide panel
+            panelWidth = slidePanel.Width;
+            slidePanel.Width = 45; // Start collapsed
+
+            //circular pb
+            MakePictureBoxCircular(btnProfilePicture);
+
+
+            //  accessing current user 
+            if (UserDataManager.CurrentUser != null)
+            {
+                UserDataManager.ApplyProfilePicture(btnProfilePicture);
+            }
+
+        }
+        //for slide panel
+        private bool isPanelCollapsed = true; // Track panel state
+        private int panelWidth; // Store the panel's default width
+
+
+        //slide  panel timer 
+        private void slideTimer_Tick(object sender, EventArgs e)
+        {
+            if (isPanelCollapsed)
+            {
+                //pnlMain.BackColor = Color.LimeGreen; //change the color of main panel
+                slidePanel.Width += 10; // Expand the panel
+                if (slidePanel.Width >= panelWidth)
+                {
+                    slideTimer.Stop();
+                    isPanelCollapsed = false; // Panel is now expanded
+                }
+            }
+            else
+            {
+                //pnlMain.BackColor = Color.LightGreen; //change the color of main panel
+                slidePanel.Width -= 10; // Collapse the panel
+                if (slidePanel.Width <= 45)
+                {
+                    slideTimer.Stop();
+                    isPanelCollapsed = true; // Panel is now collapsed
+                }
+            }
+        }
+
+
+
+
+
+
+
+        //calculate bmi
+        private double CalculateBMI(double weight, double height)
+        {
+            height = height / 100; // Convert height from cm to meters
+            return weight / (height * height);
+
+        }
+
+        //color code
+        private Color GetBMIColor(double bmi)
+        {
+            if (bmi < 18.5)
+                return Color.Blue;
+            else if (bmi >= 18.5 && bmi <= 24.9)
+                return Color.Green;
+            else if (bmi >= 25 && bmi <= 29.9)
+                return Color.Yellow;
+            else if (bmi >= 30 && bmi <= 35)
+                return Color.Orange;
+            else
+                return Color.Red;
+        }
+        private string GetBMICategory(double bmi)
+        {
+            if (bmi < 18.5)
+                return "Underweight!";
+            else if (bmi >= 18.5 && bmi <= 24.9)
+                return "Normal.";
+            else if (bmi >= 25 && bmi <= 29.9)
+                return "Overweight!";
+            else if (bmi >= 30 && bmi <= 35)
+                return "Obese!!";
+            else
+                return "Extremely Obese!!!";
+        }
+
+        //button event
+        private void btnCalculate_Click(object sender, EventArgs e)
+        {
+            if (string.IsNullOrEmpty(txtHeight.Text))
+            {
+                txtHeight.Focus(); //isi pr focus!
+                errorHeight.SetError(this.txtHeight, "Please Enter your height");
+            }
+            else if (string.IsNullOrEmpty(txtWeight.Text))
+            {
+                txtWeight.Focus(); //isi pr focus!
+                errorWeight.SetError(this.txtWeight, "Please Enter your Weight");
+            }
+            else
+            {
+                double height = 0;
+                try
+                {
+                    double weight = double.Parse(txtWeight.Text);
+                    height = double.Parse(txtHeight.Text);
+                    double bmi = CalculateBMI(weight, height);
+                    lblBMI.Text = $"Your BMI is {bmi:F2}";
+                    lblBMI.ForeColor = GetBMIColor(bmi);
+                    lblBMICategory.Text = GetBMICategory(bmi);
+                }
+                catch (FormatException ex) { MessageBox.Show("Please enter valid numeric values for height and weight: " + ex.Message); }
+                catch (Exception ex) { MessageBox.Show("An error occurred while calculating BMI: " + ex.Message); }
+
+                // Calculate target weight range
+
+                BMICalculator bmiCalculator = new BMICalculator();
+                (double minWeight, double maxWeight) targetWeightRange = bmiCalculator.CalculateTargetWeightRange(height);
+                lblTargetWeightRange.Text = $"{targetWeightRange.minWeight:F2} kg - {targetWeightRange.maxWeight:F2} kg";
+            }
+        }
+
+        //Target Weight
+        public class BMICalculator
+        {
+            public double CalculateTargetWeight(double heightInCm, double targetBMI)
+            {
+                double heightInMeters = heightInCm / 100;
+                double targetWeight = targetBMI * Math.Pow(heightInMeters, 2);
+                return targetWeight;
+            }
+
+            public (double minWeight, double maxWeight) CalculateTargetWeightRange(double heightInCm)
+            {
+                double minBMI = 18.5;
+                double maxBMI = 24.9;
+                double minWeight = CalculateTargetWeight(heightInCm, minBMI);
+                double maxWeight = CalculateTargetWeight(heightInCm, maxBMI);
+                return (minWeight, maxWeight);
+            }
+        }
+
+
+
+        //menu
+        private void btnToggle_Click(object sender, EventArgs e)
+        {
+            slideTimer.Start(); // Start the sliding animation
+            slidePanel.BringToFront();  //to remove glitches while sliding
+        }
+
+
+
+
+        //profile button
+        private void btnProfilePicture_Click(object sender, EventArgs e)
+        {
+            ProfileForm profile = new ProfileForm();
+            profile.Show();
+        }
+        //home Button
+        private void btnHome_Click_1(object sender, EventArgs e)
+        {
+            MainForm home = new MainForm();
+            home.Show();
+            this.Hide();
+        }
+
+
+
+        //dietplan form
+        private void btnDietPlans_Click_1(object sender, EventArgs e)
+        {
+            DietPlansForm dietPlans = new DietPlansForm();
+            dietPlans.Show();
+            this.Hide();
+        }
+
+        //WorkoutPlan form
+        private void btnWorkoutPlans_Click_1(object sender, EventArgs e)
+        {
+            WorkoutPlansForm workoutPlans = new WorkoutPlansForm();
+            workoutPlans.Show();
+            this.Hide();
+        }
+
+
+
+        // About Form
+        private void btnAbout_Click_1(object sender, EventArgs e)
+        {
+            AboutForm about = new AboutForm();
+            about.Show();
+            this.Hide();
+        }
+
+
+        //dashboard form
+        private void btnDashboard_Click(object sender, EventArgs e)
+        {
+            DashboardForm dashboard = new DashboardForm();
+            dashboard.Show();
+            this.Hide();
+        }
+
+        private void btnProfile_MouseEnter(object sender, EventArgs e)
+        {
+            toolTip1.SetToolTip(btnProfilePicture, "Profile");
+        }
+
+        private void txtHeight_KeyPress(object sender, KeyPressEventArgs e)
+        {
+            errorHeight.Clear();
+            char ch = e.KeyChar;
+            if (char.IsDigit(ch) == true)
+            {
+                e.Handled = false;   //if e.handled is true, it will not let anything to be typed!
+            }
+            else if (ch == 8)  //8 represents backspace , ASCII code 8, BS or Backspace
+            {
+                e.Handled = false;
+            }
+            else if (ch == 46)  //ASCII code 46, for period(.)
+            {
+                e.Handled = false;
+            }
+            else
+            {
+                e.Handled = true;
+            }
+        }
+
+        private void txtWeight_KeyPress(object sender, KeyPressEventArgs e)
+        {
+            errorWeight.Clear();
+            char ch = e.KeyChar;
+            if (char.IsDigit(ch) == true)
+            {
+                e.Handled = false;   //if e.handled is true, it will not let anything to be typed!
+            }
+            else if (ch == 8)  //8 represents backspace , ASCII code 8, BS or Backspace
+            {
+                e.Handled = false;
+            }
+            else if (ch == 46)  //ASCII code 46, for period(.)
+            {
+                e.Handled = false;
+            }
+            else
+            {
+                e.Handled = true;
+            }
+
+        }
+
+
+
+
+        //for circular picture box
+        private void MakePictureBoxCircular(PictureBox pictureBox)
+        {
+            // Ensure the PictureBox has a square size
+            int diameter = Math.Min(pictureBox.Width, pictureBox.Height);
+
+            // Create a circular path
+            System.Drawing.Drawing2D.GraphicsPath path = new System.Drawing.Drawing2D.GraphicsPath();
+            path.AddEllipse(0, 0, diameter, diameter);
+
+            // Apply the circular region
+            pictureBox.Region = new Region(path);
+
+            // Set the PictureBox's SizeMode
+            pictureBox.SizeMode = PictureBoxSizeMode.Zoom;
+        }
+
+        private void btnProfilePicture_MouseEnter(object sender, EventArgs e)
+        {
+            if (UserDataManager.CurrentUser != null)
+            {
+                toolTip1.SetToolTip(btnProfilePicture, $"{UserDataManager.CurrentUser.Username}'s Profile");
+            }
+            else
+            {
+                toolTip1.SetToolTip(btnProfilePicture, "Profile");
+            }
+        }
+    }
+}
+
+
+
+
+Diet plan
+
+
+using Newtonsoft.Json.Linq; // Newtonsoft.Json for api integration
+using System;
+using System.Collections.Generic;
+using System.Configuration;
+using System.Data.OleDb;
+using System.Drawing;
+using System.Linq;
+using System.Net.Http;
+using System.Text.RegularExpressions;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+
+namespace Gym___Fitness_App
+{
+    public partial class DietPlansForm : Form
+    {
+        public DietPlansForm()
+        {
+            InitializeComponent();
+
+            //diet for muscle gain
+            lblMuscleGain.Text = "Muscle Gain Diet:\n" + "1. Breakfast:\n" + " - Scrambled eggs with spinach and whole-grain toast\n" + " - Greek yogurt with berries and honey\n" + " - A glass of milk\n" + "2. Lunch:\n" + " - Grilled chicken breast with quinoa and steamed broccoli\n" + " - Mixed green salad with avocado, nuts, and olive oil dressing\n" + "3. Dinner:\n" + " - Baked salmon with sweet potatoes and asparagus\n" + " - Cottage cheese with pineapple\n" + "4. Snacks:\n" + " - Protein shake with banana and peanut butter\n" + " - Almonds and dried fruit\n" + "5. Extra Tips:\n" + " - Stay hydrated with plenty of water\n" + " - Include a source of protein in every meal\n" + " - Eat every 3-4 hours to maintain energy levels";
+
+            //diet for fat loss
+            lblFatLoss.Text = "Fat Loss Diet:\n" + "1. Breakfast:\n" + " - Oatmeal with chia seeds and fresh fruit\n" + " - Green smoothie with spinach, kale, and apple\n" + "2. Lunch:\n" + " - Grilled turkey breast with mixed vegetables\n" + " - Quinoa salad with chickpeas, cucumber, and lemon dressing\n" + "3. Dinner:\n" + " - Grilled shrimp with zucchini noodles and cherry tomatoes\n" + " - Lentil soup with a side of steamed vegetables\n" + "4. Snacks:\n" + " - Carrot sticks with hummus\n" + " - Apple slices with almond butter\n" + "5. Extra Tips:\n" + " - Drink plenty of water throughout the day\n" + " - Avoid sugary drinks and snacks\n" + " - Focus on whole, unprocessed foods\n" + " - Include fiber-rich foods to keep you full longer";
+        }
+
+
+        //connection string...
+        private static string connectionString = ConfigurationManager.ConnectionStrings["GymFitnessAppDbConnection"].ConnectionString;
+
+        //LOAD
+        private void DietPlansForm_Load(object sender, EventArgs e)
+        {
+            //slide panel
+            panelWidth = slidePanel.Width;
+            slidePanel.Width = 45; // Start collapsed
+
+            //circular pb
+            MakePictureBoxCircular(btnProfilePicture);
+
+
+            //  accessing current user 
+            if (UserDataManager.CurrentUser != null)
+            {
+                UserDataManager.ApplyProfilePicture(btnProfilePicture);
+
+                //database...
+                int userId = UserDataManager.CurrentUser.UserID;
+                // Replace with actual logic to get the current user ID
+                LoadDietPlans(userId);
+            }
+
+        }
+        //for slide panel
+        private bool isPanelCollapsed = true; // Track panel state
+        private int panelWidth; // Store the panel's default width
+
+
+        //slide  panel timer 
+        private void slideTimer_Tick(object sender, EventArgs e)
+        {
+            if (isPanelCollapsed)
+            {
+                //pnlMain.BackColor = Color.LimeGreen; //change the color of main panel
+                slidePanel.Width += 10; // Expand the panel
+                if (slidePanel.Width >= panelWidth)
+                {
+                    slideTimer.Stop();
+                    isPanelCollapsed = false; // Panel is now expanded
+                }
+            }
+            else
+            {
+                //pnlMain.BackColor = Color.LightGreen; //change the color of main panel
+                slidePanel.Width -= 10; // Collapse the panel
+                if (slidePanel.Width <= 45)
+                {
+                    slideTimer.Stop();
+                    isPanelCollapsed = true; // Panel is now collapsed
+                }
+            }
+        }
+
+        //menu
+        private void btnToggle_Click_1(object sender, EventArgs e)
+        {
+            slideTimer.Start(); // Start the sliding animation
+            slidePanel.BringToFront();  //to remove glitches while sliding
+        }
+
+
+        private Dictionary<string, string> nutritionData = new Dictionary<string, string>
+{
+        // Fruits
+            { "apple", "Calories: 52, Carbs: 14g, Protein: 0.3g, Fat: 0.2g" },
+            { "banana", "Calories: 89, Carbs: 23g, Protein: 1.1g, Fat: 0.3g" },
+            { "orange", "Calories: 62, Carbs: 15g, Protein: 1.2g, Fat: 0.2g" },
+            { "grape", "Calories: 69, Carbs: 18g, Protein: 0.7g, Fat: 0.2g (per 100g)" },
+            { "mango", "Calories: 60, Carbs: 15g, Protein: 0.8g, Fat: 0.4g" },
+            { "pineapple", "Calories: 50, Carbs: 13g, Protein: 0.5g, Fat: 0.1g" },
+            { "watermelon", "Calories: 30, Carbs: 8g, Protein: 0.6g, Fat: 0.2g" },
+            { "pear", "Calories: 57, Carbs: 15g, Protein: 0.4g, Fat: 0.1g" },
+            { "strawberries", "Calories: 32, Carbs: 7.7g, Protein: 0.7g, Fat: 0.3g" },
+            { "blueberries", "Calories: 57, Carbs: 14g, Protein: 0.7g, Fat: 0.3g" },
+
+
+             // Vegetables
+            { "potato", "Calories: 77, Carbs: 17g, Protein: 2g, Fat: 0.1g" },
+            { "tomato", "Calories: 18, Carbs: 3.9g, Protein: 0.9g, Fat: 0.2g" },
+            { "broccoli", "Calories: 55, Carbs: 11g, Protein: 3.7g, Fat: 0.6g" },
+            { "carrot", "Calories: 41, Carbs: 10g, Protein: 0.9g, Fat: 0.2g" },
+            { "spinach", "Calories: 23, Carbs: 3.6g, Protein: 2.9g, Fat: 0.4g" },
+            { "onion", "Calories: 40, Carbs: 9g, Protein: 1.1g, Fat: 0.1g" },
+            { "bell pepper", "Calories: 31, Carbs: 6g, Protein: 1g, Fat: 0.3g" },
+            { "zucchini", "Calories: 17, Carbs: 3.1g, Protein: 1.2g, Fat: 0.3g" },
+            { "cucumber", "Calories: 15, Carbs: 3.6g, Protein: 0.7g, Fat: 0.1g" },
+            { "corn", "Calories: 86, Carbs: 19g, Protein: 3.2g, Fat: 1.2g (per 100g)" },
+            
+
+            // Proteins
+            { "chicken breast", "Calories: 165, Carbs: 0g, Protein: 31g, Fat: 3.6g" },
+            { "egg", "Calories: 68, Carbs: 0.6g, Protein: 6g, Fat: 4.8g" },
+            { "beef steak", "Calories: 271, Carbs: 0g, Protein: 25g, Fat: 19g" },
+            { "salmon", "Calories: 208, Carbs: 0g, Protein: 20g, Fat: 13g" },
+            { "tofu", "Calories: 144, Carbs: 3.9g, Protein: 15.7g, Fat: 8.1g (per 100g)" },
+            { "lentils", "Calories: 116, Carbs: 20g, Protein: 9g, Fat: 0.4g (per 100g)" },
+            { "chickpeas", "Calories: 164, Carbs: 27g, Protein: 9g, Fat: 2.6g (per 100g)" },
+            { "shrimp", "Calories: 99, Carbs: 0.2g, Protein: 24g, Fat: 0.3g (per 100g)" },
+            { "turkey breast", "Calories: 135, Carbs: 0g, Protein: 30g, Fat: 1g" },
+           
+
+            // Dairy
+            { "milk", "Calories: 42, Carbs: 5g, Protein: 3.4g, Fat: 1g (per 100ml)" },
+            { "cheese", "Calories: 402, Carbs: 1.3g, Protein: 25g, Fat: 33g" },
+            { "yogurt", "Calories: 59, Carbs: 3.6g, Protein: 10g, Fat: 0.4g (per 100g)" },
+            { "butter", "Calories: 717, Carbs: 0.1g, Protein: 0.9g, Fat: 81g" },
+            { "cottage cheese", "Calories: 98, Carbs: 3.4g, Protein: 11g, Fat: 4.3g" },
+           
+
+             // Grains and Legumes
+            { "rice", "Calories: 130, Carbs: 28g, Protein: 2.4g, Fat: 0.3g" },
+            { "bread", "Calories: 265, Carbs: 49g, Protein: 9g, Fat: 3.2g" },
+            { "pasta", "Calories: 131, Carbs: 25g, Protein: 5g, Fat: 1.1g" },
+            { "quinoa", "Calories: 120, Carbs: 21g, Protein: 4g, Fat: 2g (per 100g)" },
+            { "oats", "Calories: 389, Carbs: 66g, Protein: 17g, Fat: 7g" },
+
+
+
+            // Nuts and Seeds
+            { "almonds", "Calories: 576, Carbs: 21g, Protein: 21g, Fat: 49g" },
+            { "walnuts", "Calories: 654, Carbs: 14g, Protein: 15g, Fat: 65g" },
+            { "peanut butter", "Calories: 588, Carbs: 20g, Protein: 25g, Fat: 50g" },
+            { "chia seeds", "Calories: 486, Carbs: 42g, Protein: 17g, Fat: 31g (per 100g)" },
+            { "flaxseeds", "Calories: 534, Carbs: 29g, Protein: 18g, Fat: 42g" },
+
+            // Oils and Fats
+            { "olive oil", "Calories: 119, Carbs: 0g, Protein: 0g, Fat: 14g (per tablespoon)" },
+            { "coconut oil", "Calories: 117, Carbs: 0g, Protein: 0g, Fat: 14g (per tablespoon)" },
+        
+            // Snacks
+            { "popcorn", "Calories: 387, Carbs: 78g, Protein: 13g, Fat: 4.3g (per 100g)" },
+            { "chocolate", "Calories: 546, Carbs: 61g, Protein: 4.9g, Fat: 31g (per 100g)" },
+
+
+            // Pakistani Food
+            { "biryani", "Calories: 290, Carbs: 34g, Protein: 15g, Fat: 10g (per serving)" },
+            { "nihari", "Calories: 260, Carbs: 4g, Protein: 20g, Fat: 20g (per serving)" },
+            { "haleem", "Calories: 315, Carbs: 40g, Protein: 20g, Fat: 10g (per serving)" },
+            { "paratha", "Calories: 290, Carbs: 33g, Protein: 4g, Fat: 15g (per piece)" },
+            { "chapli kebab", "Calories: 250, Carbs: 5g, Protein: 20g, Fat: 18g (per piece)" },
+            { "samosa", "Calories: 140, Carbs: 15g, Protein: 3g, Fat: 8g (per piece)" },
+            { "pakora", "Calories: 100, Carbs: 8g, Protein: 2g, Fat: 6g (per piece)" },
+            { "naan", "Calories: 262, Carbs: 48g, Protein: 8g, Fat: 6g (per piece)" },
+            { "karahi chicken", "Calories: 280, Carbs: 5g, Protein: 25g, Fat: 18g (per serving)" },
+            { "lassi", "Calories: 150, Carbs: 12g, Protein: 6g, Fat: 8g (per glass)" },
+
+            // International Dishes
+            { "pizza", "Calories: 266, Carbs: 33g, Protein: 11g, Fat: 10g (per slice)" },
+            { "burger", "Calories: 295, Carbs: 30g, Protein: 17g, Fat: 13g (per piece)" },
+            { "pasta alfredo", "Calories: 310, Carbs: 40g, Protein: 10g, Fat: 12g (per serving)" },
+            { "sushi", "Calories: 200, Carbs: 28g, Protein: 7g, Fat: 5g (per roll)" },
+            { "tacos", "Calories: 170, Carbs: 13g, Protein: 8g, Fat: 10g (per piece)" },
+            { "shawarma", "Calories: 300, Carbs: 25g, Protein: 20g, Fat: 15g (per roll)" },
+            { "hummus", "Calories: 160, Carbs: 15g, Protein: 5g, Fat: 9g (per serving)" },
+            { "lasagna", "Calories: 350, Carbs: 40g, Protein: 20g, Fat: 15g (per serving)" },
+
+            // Street Foods
+            { "golgappa", "Calories: 25, Carbs: 3g, Protein: 0.5g, Fat: 1g (per piece)" },
+            { "chana chaat", "Calories: 150, Carbs: 22g, Protein: 7g, Fat: 3g (per serving)" },
+            { "dahi puri", "Calories: 60, Carbs: 8g, Protein: 2g, Fat: 2g (per piece)" },
+            { "roll paratha", "Calories: 400, Carbs: 35g, Protein: 15g, Fat: 20g (per roll)" },
+            { "bun kebab", "Calories: 275, Carbs: 30g, Protein: 10g, Fat: 12g (per piece)" },
+
+            // Cold Drinks
+            { "cola", "Calories: 140, Carbs: 39g, Protein: 0g, Fat: 0g (per can)" },
+            { "lemonade", "Calories: 120, Carbs: 30g, Protein: 0g, Fat: 0g (per glass)" },
+            { "iced tea", "Calories: 90, Carbs: 22g, Protein: 0g, Fat: 0g (per glass)" },
+            { "energy drink", "Calories: 110, Carbs: 28g, Protein: 1g, Fat: 0g (per can)" },
+
+            // Dishes
+            { "korma", "Calories: 350, Carbs: 10g, Protein: 20g, Fat: 25g (per serving)" },
+            { "paya", "Calories: 300, Carbs: 5g, Protein: 15g, Fat: 20g (per serving)" },
+            { "dal makhani", "Calories: 350, Carbs: 25g, Protein: 15g, Fat: 18g (per serving)" },
+
+            // Seafood
+            { "crab curry", "Calories: 180, Carbs: 5g, Protein: 20g, Fat: 8g (per serving)" },
+            { "lobster", "Calories: 90, Carbs: 1g, Protein: 19g, Fat: 1g (per 100g)" },
+            { "pomfret fry", "Calories: 220, Carbs: 2g, Protein: 25g, Fat: 12g (per piece)" },
+            { "fish curry", "Calories: 200, Carbs: 4g, Protein: 25g, Fat: 10g (per serving)" },
+
+            // Desserts
+            { "gulab jamun", "Calories: 150, Carbs: 25g, Protein: 2g, Fat: 5g (per piece)" },
+            { "jalebi", "Calories: 100, Carbs: 22g, Protein: 0.5g, Fat: 4g (per piece)" },
+            { "kheer", "Calories: 200, Carbs: 30g, Protein: 5g, Fat: 6g (per serving)" },
+            { "ice cream", "Calories: 207, Carbs: 24g, Protein: 3.5g, Fat: 11g (per scoop)" },
+            { "brownie", "Calories: 290, Carbs: 36g, Protein: 4g, Fat: 14g (per piece)" },
+        };
+
+
+
+
+        // Search for FoodItem nutrition info
+        private void txtIngredient_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Enter) // Check if Enter key was pressed
+            {
+                e.SuppressKeyPress = true; // Prevent the default behavior (e.g., beep sound)
+                btnSearchFoodItem.PerformClick(); // Trigger the button's click event
+            }
+        }
+
+
+
+
+        //button search
+        private async void btnSearchFoodItem_Click(object sender, EventArgs e)
+        {
+            string FoodItem = txtFoodItem.Text.ToLower().Trim();
+
+            // Check if any radio button is selected
+            if (!IsAnyRadioButtonChecked())
+            {
+                errorGroupBoxRadioButtons.SetError(groupBoxRadioButtons, "Please select a Search method.");
+                return;
+            }
+            else
+            {
+                errorGroupBoxRadioButtons.Clear();
+            }
+
+            if (string.IsNullOrEmpty(FoodItem))
+            {
+                MessageBox.Show("Please enter a valid food item.", "Input Error");
+                return;
+            }
+
+            if (rbtnOffline.Checked)
+            {
+                // Offline search
+                if (nutritionData.ContainsKey(FoodItem))
+                {
+                    lblNutritionInfo.Text = nutritionData[FoodItem];
+                    DisplayLocalImage(FoodItem); // Display offline image
+                }
+                else
+                {
+                    lblNutritionInfo.Text = "Ingredient not found in local database.";
+                    pictureBoxIngredient.Image = null; // Clear the image
+                }
+            }
+            else if (rbtnOnline.Checked)
+            {
+
+                // Online search
+                lblNutritionInfo.Text = "Searching online, please wait...";
+                string nutritionInfo = await GetNutritionInfo(FoodItem);
+
+                if (!string.IsNullOrEmpty(nutritionInfo) && !nutritionInfo.StartsWith("Error"))
+                {
+                    lblNutritionInfo.Text = nutritionInfo;
+                    string imageUrl = await GetImageUrl(FoodItem);
+
+
+                    if (lblNutritionInfo.Text.Contains("Ingredient not found in local database.") || lblNutritionInfo.Text.Contains("Nutrition information not available.") || lblNutritionInfo.Text.Contains("No results found."))
+                    {
+                        pictureBoxIngredient.Image = null;
+                    }
+                    else if (!string.IsNullOrEmpty(imageUrl))
+                    {
+                        DisplayOnlineImage(imageUrl); // Display online image
+                    }
+                    else
+                    {
+                        MessageBox.Show("No image found for this food item.", "Image Not Found");
+                        pictureBoxIngredient.Image = null; // Clear the image
+                    }
+                }
+                else
+                {
+                    MessageBox.Show("Food item not found online or invalid.", "Search Error");
+                    lblNutritionInfo.Text = "Nutrition information not available.";
+                    pictureBoxIngredient.Image = null; // Clear the image
+                }
+
+
+
+            }
+        }
+
+
+
+
+
+
+        private async Task<string> GetNutritionInfo(string foodItem)
+        {
+            string apiKey = "83b4xpJNvvkEAjgrq7pxlLB2kvOPbaE1xF1qTRSY";
+            string apiUrl = $"https://api.nal.usda.gov/fdc/v1/foods/search?query={foodItem}&api_key={apiKey}";
+
+            try
+            {
+                using (HttpClient client = new HttpClient())
+                {
+                    HttpResponseMessage response = await client.GetAsync(apiUrl);
+
+                    if (response.IsSuccessStatusCode)
+                    {
+                        string jsonResponse = await response.Content.ReadAsStringAsync();
+                        JObject json = JObject.Parse(jsonResponse);
+
+                        if (json["foods"] != null && json["foods"].HasValues)
+                        {
+                            JToken firstFood = json["foods"][0];
+
+                            // Check if it contains foodNutrients
+                            if (firstFood["foodNutrients"] != null && firstFood["foodNutrients"].HasValues)
+                            {
+                                string description = firstFood["description"]?.ToString() ?? "Unknown";
+                                string calories = firstFood["foodNutrients"]?.FirstOrDefault(n => n["nutrientName"]?.ToString() == "Energy")?["value"]?.ToString() ?? "0";
+
+                                // Additional nutrient validation
+                                if (calories != "0")
+                                {
+                                    string carbs = firstFood["foodNutrients"]?.FirstOrDefault(n => n["nutrientName"]?.ToString() == "Carbohydrate, by difference")?["value"]?.ToString() ?? "0";
+                                    string protein = firstFood["foodNutrients"]?.FirstOrDefault(n => n["nutrientName"]?.ToString() == "Protein")?["value"]?.ToString() ?? "0";
+                                    string fat = firstFood["foodNutrients"]?.FirstOrDefault(n => n["nutrientName"]?.ToString() == "Total lipid (fat)")?["value"]?.ToString() ?? "0";
+
+                                    return $"Calories: {calories}, Carbs: {carbs}g, Protein: {protein}g, Fat: {fat}g";
+                                }
+                            }
+                        }
+
+                        return "No valid food item found.";
+                    }
+                    else
+                    {
+                        return $"Error: {response.ReasonPhrase}";
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                return $"An error occurred: {ex.Message}";
+            }
+        }
+
+
+
+
+
+        //to display images
+
+        //offline
+        private void DisplayLocalImage(string FoodItem)
+        {
+            string imagePath = $"images/{FoodItem}.jpg"; // Ensure you have images stored locally with this naming convention
+            if (System.IO.File.Exists(imagePath))
+            {
+                pictureBoxIngredient.SizeMode = PictureBoxSizeMode.Zoom;
+                pictureBoxIngredient.Image = Image.FromFile(imagePath);
+            }
+            else
+            {
+                pictureBoxIngredient.Image = null;
+            }
+        }
+
+        //online
+        private void DisplayOnlineImage(string imageUrl)
+        {
+            try
+            {
+                if (!string.IsNullOrEmpty(imageUrl))
+                {
+                    pictureBoxIngredient.Load(imageUrl);
+                }
+                else
+                {
+                    pictureBoxIngredient.Image = null;
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"An error occurred: {ex.Message}");
+            }
+        }
+
+
+
+
+
+
+        private async Task<string> GetImageUrl(string FoodItem)
+        {
+            string apiKey = "G6ZA7FX7OgAKsiTkAqujD3D4wxkoyyxKoZIP63eG5-g";
+            string apiUrl = $"https://api.unsplash.com/search/photos?query={FoodItem}+food&client_id={apiKey}"; // Added "+food" to query
+
+            using (HttpClient client = new HttpClient())
+            {
+                try
+                {
+                    HttpResponseMessage response = await client.GetAsync(apiUrl);
+
+                    if (response.IsSuccessStatusCode)
+                    {
+                        string jsonResponse = await response.Content.ReadAsStringAsync();
+                        JObject json = JObject.Parse(jsonResponse);
+
+                        if (json["results"] != null && json["results"].HasValues)
+                        {
+                            return json["results"][0]["urls"]["regular"].ToString();
+                        }
+                        else
+                        {
+                            MessageBox.Show($"No images found for '{FoodItem}'.", "No Results", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                            return null;
+                        }
+                    }
+                    else
+                    {
+                        MessageBox.Show("Failed to fetch image from Unsplash.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        return null;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    return $"An error occurred: {ex.Message}";
+                }
+            }
+        }
+
+
+
+
+
+
+
+        // Add item to custom plan
+
+        // Breakfast
+        private async void btnAddToBreakfast_Click(object sender, EventArgs e)
+        {
+            if (UserDataManager.CurrentUser != null)
+            {
+                await AddFoodItemToList(txtFoodItem.Text, lstBreakfastInput);
+            }
+            else
+            {
+                MessageBox.Show("No user is logged in.");
+            }
+
+        }
+
+        // Lunch
+        private async void btnAddToLunch_Click(object sender, EventArgs e)
+        {
+            if (UserDataManager.CurrentUser != null)
+            {
+                await AddFoodItemToList(txtFoodItem.Text, lstLunchInput);
+            }
+            else
+            {
+                MessageBox.Show("No user is logged in.");
+            }
+        }
+
+        // Snacks
+        private async void btnAddToSnacks_Click(object sender, EventArgs e)
+        {
+            if (UserDataManager.CurrentUser != null)
+            {
+                await AddFoodItemToList(txtFoodItem.Text, lstSnacksInput);
+
+            }
+            else
+            {
+                MessageBox.Show("No user is logged in.");
+            }
+        }
+
+        // Dinner
+        private async void btnAddToDinner_Click(object sender, EventArgs e)
+        {
+            if (UserDataManager.CurrentUser != null)
+            {
+                await AddFoodItemToList(txtFoodItem.Text, lstDinnerInput);
+            }
+            else
+            {
+                MessageBox.Show("No user is logged in.");
+            }
+        }
+
+
+
+
+        // Helper function to add food item to the specified list
+        private async Task AddFoodItemToList(string foodItem, ListBox listBox)
+        {
+            foodItem = foodItem.ToLower().Trim(); // Ensure case-insensitivity and trim spaces
+
+            if (!string.IsNullOrEmpty(foodItem))
+            {
+                // Check if the item already exists in the dictionary
+                if (!nutritionData.ContainsKey(foodItem))
+                {
+                    // Fetch nutrition info from the USDA API
+                    string nutritionInfo = await GetNutritionInfo(foodItem);
+
+                    if (!string.IsNullOrEmpty(nutritionInfo) && !nutritionInfo.StartsWith("Error") && !nutritionInfo.StartsWith("An error occurred") && nutritionInfo != "No results found for the FoodItem.")
+                    {
+                        // Add valid fetched data to the dictionary
+                        nutritionData[foodItem] = nutritionInfo;
+                    }
+                    else
+                    {
+                        MessageBox.Show($"Could not fetch valid data for '{foodItem}'. Please check the spelling or try another item.", "Invalid Food Item");
+                        return;
+                    }
+                }
+
+                // Ensure the food item exists in the dictionary before adding to the diet plan
+                if (nutritionData.ContainsKey(foodItem))
+                {
+                    listBox.Items.Add(foodItem); // Add item to the diet plan
+                }
+                else
+                {
+                    MessageBox.Show("Food item not found offline or online. Cannot add to the plan.", "Item Not Found");
+                }
+            }
+            else
+            {
+                MessageBox.Show("Please enter a valid food item.", "Input Error");
+            }
+        }
+
+
+
+
+
+        //remove from plan
+        // Remove selected item from diet plan
+        private void btnRemoveSelected_Click_1(object sender, EventArgs e)
+        {
+            // Check which ListBox has an item selected
+            if (lstBreakfastInput.SelectedItem != null)
+            {
+                RemoveSelectedItem(lstBreakfastInput, "Breakfast");
+            }
+            else if (lstLunchInput.SelectedItem != null)
+            {
+                RemoveSelectedItem(lstLunchInput, "Lunch");
+            }
+            else if (lstSnacksInput.SelectedItem != null)
+            {
+                RemoveSelectedItem(lstSnacksInput, "Snacks");
+            }
+            else if (lstDinnerInput.SelectedItem != null)
+            {
+                RemoveSelectedItem(lstDinnerInput, "Dinner");
+            }
+            else
+            {
+                MessageBox.Show("Please select an item to remove.");
+            }
+        }
+
+        private void RemoveSelectedItem(ListBox listBox, string mealTime)
+        {
+            if (listBox.SelectedItem != null)
+            {
+                string selectedItem = listBox.SelectedItem.ToString();
+                listBox.Items.Remove(selectedItem);
+
+
+                int userId = UserDataManager.CurrentUser.UserID; // Replace with actual logic to get the current user ID
+
+                using (OleDbConnection conn = new OleDbConnection(connectionString))
+                {
+                    try
+                    {
+                        conn.Open();
+
+                        string query = "DELETE FROM DietPlan WHERE UserID = @UserID AND MealTime = @MealTime AND FoodItem = @FoodItem";
+
+                        using (OleDbCommand cmd = new OleDbCommand(query, conn))
+                        {
+                            cmd.Parameters.AddWithValue("@UserID", userId);
+                            cmd.Parameters.AddWithValue("@MealTime", mealTime);
+                            cmd.Parameters.AddWithValue("@FoodItem", selectedItem);
+
+                            cmd.ExecuteNonQuery();
+                        }
+
+                        //MessageBox.Show($"Item '{selectedItem}' removed successfully!");
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show("Error: " + ex.Message);
+                    }
+                }
+            }
+        }
+
+
+
+
+
+
+
+        private async void btnCalculateTotalNutrition_Click(object sender, EventArgs e)
+        {
+            var breakfastNutrition = await CalculateMealNutritionAsync(lstBreakfastInput.Items);
+            var lunchNutrition = await CalculateMealNutritionAsync(lstLunchInput.Items);
+            var snacksNutrition = await CalculateMealNutritionAsync(lstSnacksInput.Items);
+            var dinnerNutrition = await CalculateMealNutritionAsync(lstDinnerInput.Items);
+
+            int totalCalories = breakfastNutrition.Calories + lunchNutrition.Calories + snacksNutrition.Calories + dinnerNutrition.Calories;
+            double totalCarbs = breakfastNutrition.Carbs + lunchNutrition.Carbs + snacksNutrition.Carbs + dinnerNutrition.Carbs;
+            double totalProtein = breakfastNutrition.Protein + lunchNutrition.Protein + snacksNutrition.Protein + dinnerNutrition.Protein;
+            double totalFat = breakfastNutrition.Fat + lunchNutrition.Fat + snacksNutrition.Fat + dinnerNutrition.Fat;
+
+            lblTotalNutrition.Text = $"Total Nutrition Values:\n" +
+                                     $"Calories: {totalCalories}\n" +
+                                     $"Carbs: {totalCarbs}g\n" +
+                                     $"Protein: {totalProtein}g\n" +
+                                     $"Fat: {totalFat}g";
+        }
+
+
+
+
+        private async Task<(int Calories, double Carbs, double Protein, double Fat)> CalculateMealNutritionAsync(ListBox.ObjectCollection items)
+        {
+            int mealCalories = 0;
+            double totalCarbs = 0;
+            double totalProtein = 0;
+            double totalFat = 0;
+
+            foreach (string item in items)
+            {
+                string foodItem = item.ToLower();
+                string nutritionInfo;
+
+                if (nutritionData.TryGetValue(foodItem, out nutritionInfo))
+                {
+                    int calories = ExtractCalories1(nutritionInfo);
+                    double carbs = ExtractCarbs(nutritionInfo);
+                    double protein = ExtractProtein(nutritionInfo);
+                    double fat = ExtractFat(nutritionInfo);
+
+                    mealCalories += calories;
+                    totalCarbs += carbs;
+                    totalProtein += protein;
+                    totalFat += fat;
+                }
+                else
+                {
+                    nutritionInfo = await GetNutritionInfo(foodItem);
+
+                    if (!nutritionInfo.StartsWith("Error") && !nutritionInfo.StartsWith("No results"))
+                    {
+                        int calories = ExtractCalories1(nutritionInfo);
+                        double carbs = ExtractCarbs(nutritionInfo);
+                        double protein = ExtractProtein(nutritionInfo);
+                        double fat = ExtractFat(nutritionInfo);
+
+                        mealCalories += calories;
+                        totalCarbs += carbs;
+                        totalProtein += protein;
+                        totalFat += fat;
+
+                        nutritionData[foodItem] = nutritionInfo;
+                    }
+                    else
+                    {
+                        MessageBox.Show($"Unable to fetch nutrition data for {foodItem}.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    }
+                }
+            }
+
+            return (mealCalories, totalCarbs, totalProtein, totalFat);
+        }
+
+
+
+
+
+
+
+
+
+        private int ExtractCalories1(string nutritionInfo)
+        {
+            var match = Regex.Match(nutritionInfo, @"Calories:\s*(\d+)");
+            return match.Success ? int.Parse(match.Groups[1].Value) : 0;
+        }
+
+        private double ExtractCarbs(string nutritionInfo)
+        {
+            var match = Regex.Match(nutritionInfo, @"Carbs:\s*(\d+)g");
+            return match.Success ? int.Parse(match.Groups[1].Value) : 0;
+        }
+
+        private double ExtractProtein(string nutritionInfo)
+        {
+            var match = Regex.Match(nutritionInfo, @"Protein:\s*(\d+(\.\d+)?)g");
+            return match.Success ? double.Parse(match.Groups[1].Value) : 0.0;
+        }
+
+        private double ExtractFat(string nutritionInfo)
+        {
+            var match = Regex.Match(nutritionInfo, @"Fat:\s*(\d+(\.\d+)?)g");
+            return match.Success ? double.Parse(match.Groups[1].Value) : 0.0;
+        }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        //profile button
+        private void btnProfilePicture_Click(object sender, EventArgs e)
+        {
+            ProfileForm profile = new ProfileForm();
+            profile.Show();
+            this.Hide();
+        }
+
+
+        //home Button
+        private void btnHome_Click(object sender, EventArgs e)
+        {
+            MainForm home = new MainForm();
+            home.Show();
+            this.Hide();
+        }
+
+        //bmi calculator button
+        private void btnBMICalculator_Click(object sender, EventArgs e)
+        {
+
+            BMICalculatorForm bmiCalculator = new BMICalculatorForm();
+            bmiCalculator.Show();
+            this.Hide();
+        }
+
+
+
+        //WorkoutPlan form
+        private void btnWorkoutPlans_Click(object sender, EventArgs e)
+        {
+            WorkoutPlansForm workoutPlans = new WorkoutPlansForm();
+            workoutPlans.Show();
+            this.Hide();
+        }
+
+
+        // About Form
+        private void btnAbout_Click(object sender, EventArgs e)
+        {
+            AboutForm about = new AboutForm();
+            about.Show();
+            this.Hide();
+        }
+
+
+
+        //dashboard form
+        private void btnDashboard_Click_1(object sender, EventArgs e)
+        {
+            DashboardForm dashboard = new DashboardForm();
+            dashboard.Show();
+            this.Hide();
+        }
+
+        private void btnProfile_MouseEnter(object sender, EventArgs e)
+        {
+            toolTip1.SetToolTip(btnProfilePicture, "Profile");
+        }
+
+
+
+        //database
+
+        private void btnSaveDietPlan_Click(object sender, EventArgs e)
+        {
+            if (UserDataManager.CurrentUser != null)
+            {
+                int userId = UserDataManager.CurrentUser.UserID; // Replace with actual logic to get the current user ID
+                string notes = richTextBoxNotesInput.Text; // Get the notes from the RichTextBox
+
+                using (OleDbConnection conn = new OleDbConnection(connectionString))
+                {
+                    try
+                    {
+                        conn.Open();
+
+                        string query = "INSERT INTO DietPlan (UserID, MealTime, FoodItem, Notes) VALUES (@UserID, @MealTime, @FoodItem, @Notes)";
+
+                        using (OleDbCommand cmd = new OleDbCommand(query, conn))
+                        {
+                            // Save Breakfast items
+                            foreach (var item in lstBreakfastInput.Items)
+                            {
+                                cmd.Parameters.Clear();
+                                cmd.Parameters.AddWithValue("@UserID", userId);
+                                cmd.Parameters.AddWithValue("@MealTime", "Breakfast");
+                                cmd.Parameters.AddWithValue("@FoodItem", item.ToString());
+                                cmd.Parameters.AddWithValue("@Notes", notes);
+                                cmd.ExecuteNonQuery();
+                            }
+
+                            // Save Lunch items
+                            foreach (var item in lstLunchInput.Items)
+                            {
+                                cmd.Parameters.Clear();
+                                cmd.Parameters.AddWithValue("@UserID", userId);
+                                cmd.Parameters.AddWithValue("@MealTime", "Lunch");
+                                cmd.Parameters.AddWithValue("@FoodItem", item.ToString());
+                                cmd.Parameters.AddWithValue("@Notes", notes);
+                                cmd.ExecuteNonQuery();
+                            }
+
+                            // Save Snacks items
+                            foreach (var item in lstSnacksInput.Items)
+                            {
+                                cmd.Parameters.Clear();
+                                cmd.Parameters.AddWithValue("@UserID", userId);
+                                cmd.Parameters.AddWithValue("@MealTime", "Snacks");
+                                cmd.Parameters.AddWithValue("@FoodItem", item.ToString());
+                                cmd.Parameters.AddWithValue("@Notes", notes);
+                                cmd.ExecuteNonQuery();
+                            }
+
+                            // Save Dinner items
+                            foreach (var item in lstDinnerInput.Items)
+                            {
+                                cmd.Parameters.Clear();
+                                cmd.Parameters.AddWithValue("@UserID", userId);
+                                cmd.Parameters.AddWithValue("@MealTime", "Dinner");
+                                cmd.Parameters.AddWithValue("@FoodItem", item.ToString());
+                                cmd.Parameters.AddWithValue("@Notes", notes);
+                                cmd.ExecuteNonQuery();
+                            }
+                        }
+
+                        MessageBox.Show("Diet plan saved successfully!");
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show("Error: " + ex.Message);
+                    }
+                }
+            }
+            else
+            {
+                MessageBox.Show("No user is logged in.");
+            }
+        }
+
+
+
+        //loading data from database
+        private void LoadDietPlans(int userId)
+        {
+            using (OleDbConnection conn = new OleDbConnection(connectionString))
+            {
+                try
+                {
+                    conn.Open();
+
+                    // Change query to select based on UserId or Username
+                    string query = "SELECT MealTime, FoodItem, Notes FROM DietPlan WHERE UserID = @UserID"; // Ensure the column name matches the database
+
+                    using (OleDbCommand cmd = new OleDbCommand(query, conn))
+                    {
+                        cmd.Parameters.AddWithValue("@UserID", userId);  // Add parameter for userId
+
+                        using (OleDbDataReader reader = cmd.ExecuteReader())  // Use OleDbDataReader for MS Access
+                        {
+                            // Clear the current lists
+                            lstBreakfastInput.Items.Clear();
+                            lstLunchInput.Items.Clear();
+                            lstSnacksInput.Items.Clear();
+                            lstDinnerInput.Items.Clear();
+                            richTextBoxNotesInput.Clear();
+
+                            // Populate the lists with data from the database
+                            while (reader.Read())
+                            {
+                                string mealTime = reader["MealTime"].ToString();
+                                string foodItem = reader["FoodItem"].ToString();
+                                string notes = reader["Notes"].ToString();
+
+                                // Add food item to the appropriate meal list based on the MealTime
+                                switch (mealTime)
+                                {
+                                    case "Breakfast":
+                                        lstBreakfastInput.Items.Add(foodItem);
+                                        break;
+                                    case "Lunch":
+                                        lstLunchInput.Items.Add(foodItem);
+                                        break;
+                                    case "Snacks":
+                                        lstSnacksInput.Items.Add(foodItem);
+                                        break;
+                                    case "Dinner":
+                                        lstDinnerInput.Items.Add(foodItem);
+                                        break;
+                                }
+
+                                // Load notes (assuming notes are the same for all meals)
+                                if (!string.IsNullOrEmpty(notes))
+                                {
+                                    richTextBoxNotesInput.Text = notes;
+                                }
+                            }
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show("Error: " + ex.Message);
+                }
+            }
+        }
+
+
+        private bool IsAnyRadioButtonChecked()
+        {
+            return rbtnOffline.Checked || rbtnOnline.Checked;
+        }
+
+        //for circular picture box
+        private void MakePictureBoxCircular(PictureBox pictureBox)
+        {
+            // Ensure the PictureBox has a square size
+            int diameter = Math.Min(pictureBox.Width, pictureBox.Height);
+
+            // Create a circular path
+            System.Drawing.Drawing2D.GraphicsPath path = new System.Drawing.Drawing2D.GraphicsPath();
+            path.AddEllipse(0, 0, diameter, diameter);
+
+            // Apply the circular region
+            pictureBox.Region = new Region(path);
+
+            // Set the PictureBox's SizeMode
+            pictureBox.SizeMode = PictureBoxSizeMode.Zoom;
+        }
+
+        private void btnProfilePicture_MouseEnter(object sender, EventArgs e)
+        {
+            if (UserDataManager.CurrentUser != null)
+            {
+                toolTip1.SetToolTip(btnProfilePicture, $"{UserDataManager.CurrentUser.Username}'s Profile");
+            }
+            else
+            {
+                toolTip1.SetToolTip(btnProfilePicture, "Profile");
+            }
+        }
+
+
+    }
+}
+
+
+
+Workout plan
+
+
+using System;
+using System.Collections.Generic;
+using System.Configuration;
+using System.Data.OleDb;
+using System.Drawing;
+using System.Windows.Forms;
+
+namespace Gym___Fitness_App
+{
+    public partial class WorkoutPlansForm : Form
+    {
+        public WorkoutPlansForm()
+        {
+            InitializeComponent();
+        }
+
+
+        //connection string...
+        private static string connectionString = ConfigurationManager.ConnectionStrings["GymFitnessAppDbConnection"].ConnectionString;
+
+
+
+        //load
+        private void WorkoutPlansForm_Load(object sender, EventArgs e)
+        {
+            //slide panel
+            panelWidth = slidePanel.Width;
+            slidePanel.Width = 45; // Start collapsed
+
+            //circular pb
+            MakePictureBoxCircular(btnProfilePicture);
+
+
+            //  accessing current user 
+            if (UserDataManager.CurrentUser != null)
+            {
+                UserDataManager.ApplyProfilePicture(btnProfilePicture);
+
+                //database
+                int userId = UserDataManager.CurrentUser.UserID; // Replace with logic to get the logged-in user's ID
+                LoadWorkoutPlan(userId);
+            }
+
+        }
+
+
+
+        //for slide panel
+        private bool isPanelCollapsed = true; // Track panel state
+        private int panelWidth; // Store the panel's default width
+
+
+        //slide  panel timer 
+        private void slideTimer_Tick(object sender, EventArgs e)
+        {
+            if (isPanelCollapsed)
+            {
+                //pnlMain.BackColor = Color.LimeGreen; //change the color of main panel
+                slidePanel.Width += 10; // Expand the panel
+                if (slidePanel.Width >= panelWidth)
+                {
+                    slideTimer.Stop();
+                    isPanelCollapsed = false; // Panel is now expanded
+                }
+            }
+            else
+            {
+                //pnlMain.BackColor = Color.LightGreen; //change the color of main panel
+                slidePanel.Width -= 10; // Collapse the panel
+                if (slidePanel.Width <= 45)
+                {
+                    slideTimer.Stop();
+                    isPanelCollapsed = true; // Panel is now collapsed
+                }
+            }
+        }
+
+
+        //menu
+        private void btnToggle_Click_1(object sender, EventArgs e)
+        {
+            slideTimer.Start(); // Start the sliding animation
+            slidePanel.BringToFront();  //to remove glitches while sliding
+        }
+
+
+
+
+
+
+
+        //type of workout
+        private void cmbWorkoutType_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            string selectedWorkoutType = cmbWorkoutType.SelectedItem.ToString();
+            LoadExercises(selectedWorkoutType);
+        }
+
+
+
+        private void LoadExercises(string workoutType)
+        {
+            pnlExercises.Controls.Clear();
+            List<Exercise> exercises = GetExercises(workoutType);
+            int yOffset = 10;
+            foreach (Exercise exercise in exercises)
+            {
+                Label lblExercise = new Label();
+                lblExercise.Text = exercise.Name;
+                lblExercise.Location = new Point(10, yOffset);
+                lblExercise.AutoSize = true;
+                // Create a new font with the desired family, size, and style
+                Font newFont = new Font("Arial", 12, FontStyle.Bold | FontStyle.Italic); // Apply the font to a Label control
+                lblExercise.Font = newFont;
+
+
+                Label lblInstructions = new Label();
+                lblInstructions.Text = exercise.Instructions;
+                lblInstructions.Location = new Point(10, yOffset + 20);
+                lblInstructions.AutoSize = true;
+                Font newFont1 = new Font("Arial", 12, FontStyle.Regular); // Apply the font to a Label control
+                lblInstructions.Font = newFont1;
+
+                PictureBox picExercise = new PictureBox();
+                picExercise.ImageLocation = exercise.GifUrl;
+                picExercise.SizeMode = PictureBoxSizeMode.StretchImage;
+                picExercise.Size = new Size(300, 260);
+                picExercise.Location = new Point(13, yOffset + 50);
+                pnlExercises.Controls.Add(lblExercise);
+
+                pnlExercises.Controls.Add(lblInstructions);
+                pnlExercises.Controls.Add(picExercise);
+                yOffset += 330; // Adjust spacing as needed } }
+
+            }
+        }
+
+
+        //for labels font 
+
+
+        private List<Exercise> GetExercises(string workoutType)
+        {
+            List<Exercise> exercises = new List<Exercise>();
+
+            if (workoutType == "Gym Workout")
+            {
+                exercises.Add(new Exercise { Name = "1. Bench Press", Instructions = "- Lie on a bench\n- Grip the barbell\n- Lower it to your chest\n- Press it back up.", GifUrl = "https://giphy.com/gifs/press-bench-chest-z1Suqc2f0GCPReDgUB.gif" });
+                exercises.Add(new Exercise { Name = "2. Deadlifts", Instructions = "- Stand with your feet hip-width apart\n- Grip the barbell\n- Lift it by extending your hips and knees.", GifUrl = "https://example.com/deadlifts.gif" });
+                exercises.Add(new Exercise { Name = "3. Squats", Instructions = "- Position the barbell on your upper back\n- Lower your hips until your thighs are parallel to the floor\n- Stand back up.", GifUrl = "https://example.com/squats.gif" });
+                exercises.Add(new Exercise { Name = "4. Lat Pulldown", Instructions = "- Sit at the machine\n- Grip the bar\n- Pull it down to your chest while keeping your back straight.", GifUrl = "https://example.com/lat_pulldown.gif" });
+                exercises.Add(new Exercise { Name = "5. Shoulder Press", Instructions = "- Sit on a bench with a backrest\n- Press the dumbbells upward until your arms are fully extended.", GifUrl = "https://example.com/shoulder_press.gif" });
+                exercises.Add(new Exercise { Name = "6. Bicep Curls", Instructions = "- Hold dumbbells at your sides\n- Curl them up to shoulder level\n- Lower them back down.", GifUrl = "https://example.com/bicep_curls.gif" });
+                exercises.Add(new Exercise { Name = "7. Tricep Dips", Instructions = "- Place your hands on a bench behind you\n- Lower your body\n- Push back up.", GifUrl = "https://example.com/tricep_dips.gif" });
+                exercises.Add(new Exercise { Name = "8. Chest Fly", Instructions = "- Lie on a bench\n- Hold dumbbells above your chest\n- Open your arms wide\n- Bring them back together.", GifUrl = "https://example.com/chest_fly.gif" });
+                exercises.Add(new Exercise { Name = "9. Leg Press", Instructions = "- Sit on the leg press machine\n- Push the platform away from your body\n- Return to the start.", GifUrl = "https://example.com/leg_press.gif" });
+                exercises.Add(new Exercise { Name = "10. Cable Rows", Instructions = "- Sit at the cable machine\n- Pull the handle towards your body\n- Release.", GifUrl = "https://example.com/cable_rows.gif" });
+                exercises.Add(new Exercise { Name = "11. Incline Dumbbell Press", Instructions = "- Lie on an incline bench\n- Press dumbbells upward\n- Lower them back down.", GifUrl = "https://example.com/incline_press.gif" });
+                exercises.Add(new Exercise { Name = "12. T-Bar Rows", Instructions = "- Grip the T-bar\n- Row the bar towards your chest\n- Slowly release.", GifUrl = "https://example.com/tbar_rows.gif" });
+                exercises.Add(new Exercise { Name = "13. Pull-Ups", Instructions = "- Hang from a bar\n- Pull your body up until your chin is above the bar\n- Lower back down.", GifUrl = "https://example.com/pull_ups.gif" });
+                exercises.Add(new Exercise { Name = "14. Seated Calf Raises", Instructions = "- Sit at the calf raise machine\n- Press up onto your toes\n- Lower back down.", GifUrl = "https://example.com/calf_raises.gif" });
+                exercises.Add(new Exercise { Name = "15. Hammer Curls", Instructions = "- Hold dumbbells with a neutral grip\n- Curl them up\n- Lower them back down.", GifUrl = "https://example.com/hammer_curls.gif" });
+            }
+
+            else if (workoutType == "Home Workout")
+            {
+                exercises.Add(new Exercise { Name = "1. Push-ups", Instructions = "- Start in a plank position with your hands shoulder-width apart\n- Lower your body until your chest nearly touches the floor\n- Push back up.", GifUrl = "https://example.com/push_ups.gif" });
+                exercises.Add(new Exercise { Name = "2. Lunges", Instructions = "- Step forward with one leg\n- Lower your hips until both knees are bent at about a 90-degree angle.", GifUrl = "https://example.com/lunges.gif" });
+                exercises.Add(new Exercise { Name = "3. Plank", Instructions = "- Hold a plank position with your forearms and toes on the ground\n- Keep your body in a straight line.", GifUrl = "https://example.com/plank.gif" });
+                exercises.Add(new Exercise { Name = "4. Burpees", Instructions = "- Begin standing\n- Drop into a squat\n- Kick your feet back into a plank\n- Perform a push-up\n- Return to standing.", GifUrl = "https://example.com/burpees.gif" });
+                exercises.Add(new Exercise { Name = "5. Mountain Climbers", Instructions = "- Start in a plank position\n- Alternately drive your knees toward your chest in a running motion.", GifUrl = "https://example.com/mountain_climbers.gif" });
+                exercises.Add(new Exercise { Name = "6. Jumping Jacks", Instructions = "- Jump with your legs spreading apart\n- Hands touching above your head\n- Return to the starting position.", GifUrl = "https://example.com/jumping_jacks.gif" });
+                exercises.Add(new Exercise { Name = "7. Leg Raises", Instructions = "- Lie on your back\n- Keep your legs straight\n- Lift them upward until perpendicular to the floor.", GifUrl = "https://example.com/leg_raises.gif" });
+                exercises.Add(new Exercise { Name = "8. Side Plank", Instructions = "- Lie on your side\n- Prop your body up with one forearm\n- Hold the position.", GifUrl = "https://example.com/side_plank.gif" });
+                exercises.Add(new Exercise { Name = "9. Wall Sit", Instructions = "- Lean against a wall\n- Bend your knees at 90 degrees\n- Hold the position.", GifUrl = "https://example.com/wall_sit.gif" });
+                exercises.Add(new Exercise { Name = "10. Step-Ups", Instructions = "- Step onto a raised platform\n- Step back down.", GifUrl = "https://example.com/step_ups.gif" });
+                exercises.Add(new Exercise { Name = "11. High Knees", Instructions = "- Run in place\n- Lift your knees as high as possible.", GifUrl = "https://example.com/high_knees.gif" });
+                exercises.Add(new Exercise { Name = "12. Glute Bridge", Instructions = "- Lie on your back\n- Bend your knees\n- Lift your hips upward.", GifUrl = "https://example.com/glute_bridge.gif" });
+                exercises.Add(new Exercise { Name = "13. Superman", Instructions = "- Lie face down\n- Lift your arms and legs off the ground\n- Hold.", GifUrl = "https://example.com/superman.gif" });
+                exercises.Add(new Exercise { Name = "14. Flutter Kicks", Instructions = "- Lie on your back\n- Keep your legs straight\n- Alternate kicking them upward.", GifUrl = "https://example.com/flutter_kicks.gif" });
+                exercises.Add(new Exercise { Name = "15. Reverse Crunches", Instructions = "- Lie on your back\n- Lift your knees towards your chest\n- Lift your hips off the floor.", GifUrl = "https://example.com/reverse_crunches.gif" });
+
+            }
+
+            else if (workoutType == "Yoga")
+            {
+                exercises.Add(new Exercise { Name = "1. Downward Dog", Instructions = "- Start on all fours\n- Lift your hips toward the ceiling\n- Straighten your legs into an inverted V-shape.", GifUrl = "https://example.com/downward_dog.gif" });
+                exercises.Add(new Exercise { Name = "2. Warrior Pose", Instructions = "- Step one foot forward\n- Bend the front knee\n- Stretch your arms above your head.", GifUrl = "https://example.com/warrior_pose.gif" });
+                exercises.Add(new Exercise { Name = "3. Tree Pose", Instructions = "- Stand on one leg\n- Place the sole of the other foot on your inner thigh\n- Bring your hands together above your head.", GifUrl = "https://example.com/tree_pose.gif" });
+                exercises.Add(new Exercise { Name = "4. Cat-Cow Stretch", Instructions = "- On all fours\n- Alternate between arching your back (cow) and rounding it (cat).", GifUrl = "https://example.com/cat_cow_stretch.gif" });
+                exercises.Add(new Exercise { Name = "5. Child's Pose", Instructions = "- Sit back on your heels\n- Stretch your arms forward\n- Rest your forehead on the floor.", GifUrl = "https://example.com/childs_pose.gif" });
+                exercises.Add(new Exercise { Name = "6. Cobra Pose", Instructions = "- Lie on your stomach\n- Place your hands under your shoulders\n- Lift your chest upward.", GifUrl = "https://example.com/cobra_pose.gif" });
+                exercises.Add(new Exercise { Name = "7. Bridge Pose", Instructions = "- Lie on your back\n- Bend your knees\n- Lift your hips upward.", GifUrl = "https://example.com/bridge_pose.gif" });
+                exercises.Add(new Exercise { Name = "8. Pigeon Pose", Instructions = "- Bring one leg forward\n- Bend it\n- Stretch the other leg behind you.", GifUrl = "https://example.com/pigeon_pose.gif" });
+                exercises.Add(new Exercise { Name = "9. Half Spinal Twist", Instructions = "- Sit on the floor\n- Twist your upper body\n- Hold onto your opposite knee.", GifUrl = "https://example.com/spinal_twist.gif" });
+                exercises.Add(new Exercise { Name = "10. Boat Pose", Instructions = "- Sit on the floor\n- Lift your legs\n- Balance on your hips.", GifUrl = "https://example.com/boat_pose.gif" });
+                exercises.Add(new Exercise { Name = "11. Seated Forward Bend", Instructions = "- Sit on the floor with your legs extended\n- Reach forward\n- Try to touch your toes.", GifUrl = "https://example.com/seated_forward_bend.gif" });
+                exercises.Add(new Exercise { Name = "12. Camel Pose", Instructions = "- Kneel on the floor\n- Reach back\n- Place your hands on your heels while arching your back.", GifUrl = "https://example.com/camel_pose.gif" });
+                exercises.Add(new Exercise { Name = "13. Lotus Pose", Instructions = "- Sit cross-legged\n- Place your feet resting on your thighs\n- Hands resting on your knees.", GifUrl = "https://example.com/lotus_pose.gif" });
+                exercises.Add(new Exercise { Name = "14. Eagle Pose", Instructions = "- Wrap one arm under the other\n- One leg over the other\n- Balance on one foot.", GifUrl = "https://example.com/eagle_pose.gif" });
+                exercises.Add(new Exercise { Name = "15. Fish Pose", Instructions = "- Lie on your back\n- Arch your upper back\n- Rest the crown of your head on the floor.", GifUrl = "https://example.com/fish_pose.gif" });
+            }
+            return exercises;
+        }
+
+
+
+        public class Exercise
+        {
+            public string Name { get; set; }
+            public string Instructions { get; set; }
+            public string GifUrl { get; set; }
+        }
+
+
+        //profile button
+        private void btnProfilePicture_Click(object sender, EventArgs e)
+        {
+            ProfileForm profile = new ProfileForm();
+            profile.Show();
+            this.Hide();
+        }
+
+
+
+        //home Button
+        private void btnHome_Click(object sender, EventArgs e)
+        {
+            MainForm home = new MainForm();
+            home.Show();
+            this.Hide();
+        }
+
+        //bmi calculator button
+        private void btnBMICalculator_Click(object sender, EventArgs e)
+        {
+            BMICalculatorForm bmiCalculator = new BMICalculatorForm();
+            bmiCalculator.Show();
+            this.Hide();
+        }
+
+        //dietplan form
+        private void btnDietPlans_Click_1(object sender, EventArgs e)
+        {
+            DietPlansForm dietPlans = new DietPlansForm();
+            dietPlans.Show();
+            this.Hide();
+        }
+
+
+
+        // About Form
+        private void btnAbout_Click_1(object sender, EventArgs e)
+        {
+            AboutForm about = new AboutForm();
+            about.Show();
+            this.Hide();
+        }
+
+        private void btnDashboard_Click(object sender, EventArgs e)
+        {
+            DashboardForm dashboard = new DashboardForm();
+            dashboard.Show();
+            this.Hide();
+        }
+
+        //tooltip
+        private void btnProfile_MouseEnter(object sender, EventArgs e)
+        {
+            toolTip1.SetToolTip(btnProfilePicture, "Profile");
+        }
+
+        private void btnSaveWorkoutPlan_Click(object sender, EventArgs e)
+        {
+            // Validate user
+            if (UserDataManager.CurrentUser == null || UserDataManager.CurrentUser.UserID <= 0)
+            {
+                MessageBox.Show("No user is logged in or User ID is invalid.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            int userId = UserDataManager.CurrentUser.UserID;
+
+
+
+            using (OleDbConnection conn = new OleDbConnection(connectionString))
+            {
+                try
+                {
+                    conn.Open();
+
+                    // Clear existing workout plans for the user
+                    string deleteQuery = "DELETE FROM WorkoutPlan WHERE UserID = @UserID";
+                    using (OleDbCommand deleteCmd = new OleDbCommand(deleteQuery, conn))
+                    {
+                        deleteCmd.Parameters.Add(new OleDbParameter("@UserID", OleDbType.Integer) { Value = userId });
+                        deleteCmd.ExecuteNonQuery();
+                    }
+
+                    // Insert updated workout plan
+                    string insertQuery = "INSERT INTO WorkoutPlan ([UserID], [Day], [Workout], [Duration], [Intensity]) VALUES (@UserID, @Day, @Workout, @Duration, @Intensity)";
+                    using (OleDbCommand insertCmd = new OleDbCommand(insertQuery, conn))
+                    {
+                        foreach (DataGridViewRow row in dgvWorkoutPlan.Rows)
+                        {
+                            if (!row.IsNewRow) // Skip the empty row at the end
+                            {
+                                insertCmd.Parameters.Clear();
+                                insertCmd.Parameters.Add(new OleDbParameter("@UserID", OleDbType.Integer) { Value = userId });
+                                insertCmd.Parameters.Add(new OleDbParameter("@Day", OleDbType.VarChar) { Value = row.Cells["Day"].Value?.ToString() ?? "" });
+                                insertCmd.Parameters.Add(new OleDbParameter("@Workout", OleDbType.VarChar) { Value = row.Cells["Workout"].Value?.ToString() ?? "" });
+                                insertCmd.Parameters.Add(new OleDbParameter("@Duration", OleDbType.VarChar) { Value = row.Cells["Duration"].Value?.ToString() ?? "" });
+                                insertCmd.Parameters.Add(new OleDbParameter("@Intensity", OleDbType.VarChar) { Value = row.Cells["Intensity"].Value?.ToString() ?? "" });
+                                insertCmd.ExecuteNonQuery();
+                            }
+                        }
+                    }
+
+                    MessageBox.Show("Workout plan saved successfully!", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show("Error: " + ex.Message, "Database Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            }
+        }
+
+
+
+
+        private void LoadWorkoutPlan(int userId)
+        {
+
+            using (OleDbConnection conn = new OleDbConnection(connectionString))
+            {
+                try
+                {
+                    conn.Open();
+
+                    string query = "SELECT Day, Workout, Duration, Intensity FROM WorkoutPlan WHERE UserID = @UserID";
+                    using (OleDbCommand cmd = new OleDbCommand(query, conn))
+                    {
+                        cmd.Parameters.AddWithValue("@UserID", userId);
+
+                        using (OleDbDataReader reader = cmd.ExecuteReader())
+                        {
+                            dgvWorkoutPlan.Rows.Clear(); // Clear existing rows in the DataGridView
+
+                            while (reader.Read())
+                            {
+                                dgvWorkoutPlan.Rows.Add(
+                                    reader["Day"].ToString(),
+                                    reader["Workout"].ToString(),
+                                    reader["Duration"].ToString(),
+                                    reader["Intensity"].ToString()
+                                );
+                            }
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show("Error: " + ex.Message);
+                }
+            }
+        }
+
+
+
+        //for circular picture box
+        private void MakePictureBoxCircular(PictureBox pictureBox)
+        {
+            // Ensure the PictureBox has a square size
+            int diameter = Math.Min(pictureBox.Width, pictureBox.Height);
+
+            // Create a circular path
+            System.Drawing.Drawing2D.GraphicsPath path = new System.Drawing.Drawing2D.GraphicsPath();
+            path.AddEllipse(0, 0, diameter, diameter);
+
+            // Apply the circular region
+            pictureBox.Region = new Region(path);
+
+            // Set the PictureBox's SizeMode
+            pictureBox.SizeMode = PictureBoxSizeMode.Zoom;
+        }
+
+        private void btnProfilePicture_MouseEnter(object sender, EventArgs e)
+        {
+            if (UserDataManager.CurrentUser != null)
+            {
+                toolTip1.SetToolTip(btnProfilePicture, $"{UserDataManager.CurrentUser.Username}'s Profile");
+            }
+            else
+            {
+                toolTip1.SetToolTip(btnProfilePicture, "Profile");
+            }
+        }
+
+
+    }
+}
+
+
+
+
+
+
